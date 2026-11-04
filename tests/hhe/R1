@@ -1,0 +1,11 @@
+ln -s -f $BASE/data data
+ln -s ./data/linelist.test fort.19
+cp hhe35nl.7 fort.8
+$BASE/src/synspec2.01.exe <hhe35nl.5 >hhe35nl.log
+
+cp fort.7  hhe35nl.spec
+cp fort.17 hhe35nl.cont
+cp fort.12 hhe35nl.iden
+
+rm -f fort.19
+

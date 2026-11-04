@@ -1,0 +1,13 @@
+ln -s -f $BASE/data data
+#cp fort.55.lin fort.55
+cp BGA20000g400v2.7 fort.8
+ln -s ./data/linelist.test fort.19
+$BASE/src/synspec2.01.exe <BGA20000g400v2.5 >BG20.log
+
+cp fort.7  BG20.spec
+cp fort.17 BG20.cont
+cp fort.12 BG20.iden
+
+rm -f fort.19
+rm -f fort.55
+

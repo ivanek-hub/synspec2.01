@@ -1,0 +1,9 @@
+ln -s -f $BASE/linelist/gfATO.bin .
+ln -s -f $BASE/linelist/gfMOL.bin .
+ln -s -f $BASE/linelist/gfTiO.bin .
+
+ln -s -f $BASE/data data
+
+$BASE/src/synspec2.01.exe <tab.5 >optes.6
+cp fort.29 optes.29
+cp fort.69 optes.69

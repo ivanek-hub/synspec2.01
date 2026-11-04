@@ -1,0 +1,12 @@
+ln -s -f $BASE/data data
+ln -s -f $BASE/linelist/gfATO.dat .
+ln -s -f $BASE/linelist/gfTiO.bin .
+ln -s -f $BASE/mollists mol
+
+cp ap00t3500g40k0odfnew.dat fort.8
+
+$BASE/src/synspec2.01.exe < tab.5 > m35.log
+
+cp fort.7 m35.spec
+cp fort.17 m35.cont
+
