@@ -90,6 +90,7 @@
       ALLOCATE      (LGR(MATOM),LRM(MATOM))                                     
       ALLOCATE      (PFSTD(MION,MATOM),MODPF(MATOM),                      &     
      &              RR(MATOM,MION),                                       &     
+     &              CHAREF(MATOM,MDEPTH),                                 &
      &              ENEV(MATOM,MI1),AMAS(MATOM),ABND(MATOM),              &     
      &              ABNDD(MATOM,MDEPTH),ABNREF(MDEPTH),TYPAT(MATOM))            
       ALLOCATE      (IATEX(MATOM),INPOT(MATOM,MION0),                     &     
@@ -134,6 +135,7 @@
       subroutine alloc_modelp                                                   
       use params                                                                
       use modelp                                                                
+      use diffus
 !                                                                               
 !     Basic parameters of the model atmosphere                                  
 !                                                                               
@@ -155,27 +157,19 @@
      &              WNHINT(NLMX,MDEPTH),                                  &     
      &              WNHE2(NLMX,MDEPTH),                                   &     
      &              RRR(MDEPTH,MION,MATOM),                               &     
+     &              IDMAX(MION,MATOM),                                    &
      &              JT(MDEPTH),                                           &     
      &              TI0(MDEPTH),                                          &     
      &              TI1(MDEPTH),                                          &     
      &              TI2(MDEPTH),                                          &     
      &              VDWC(MDEPTH),                                         &     
-     &              DOPA1(MATOM,MDEPTH))                                        
+     &              DOPA1(MATOM,MDEPTH),FRAION(MATOM,MDEPTH))                                        
       ALLOCATE      (CMOL(MMOLEC))                                              
       ALLOCATE      (RRMOL(MMOLEC,MDEPTH),                                &     
      &              DOPMOL(MMOLEC,MDEPTH),                                &     
      &              AMMOL(MMOLEC),                                        &     
      &              anh2(mdepth),anch(mdepth),anoh(mdepth),               &     
      &              anhm(mdepth))                                               
-!                                                                               
-!     ALLOCATE      (OPATM(MATOM,MFREQ,MDEPTH),                           &     
-!    &              EMATM(MATOM,MFREQ,MDEPTH),                            &     
-!    &              OPATML(MATOM,MFREQ),                                  &     
-!    &              GRADAT(MATOM,MDEPTH),                                 &     
-!    &              GRADFA(MATOM,MDEPTH),                                 &     
-!    &              POPAT(MATOM,MDEPTH),                                  &     
-!    &              DGRAD0(MATOM,MATOM,MDEPTH),                           &     
-!    &              DGRADP(MATOM,MATOM,MDEPTH))                                 
 !                                                                               
 !     ALLOCATE      (RAD(MFREQ,MDEPTH),                                   &     
 !    &              RAD0(MFREQ,MDEPTH),                                   &     
@@ -219,6 +213,8 @@
                                                                                 
       ALLOCATE      (ESEMAT(MLEVEL,MLEVEL),BESE(MLEVEL),POPLTE(MLEVEL),   &     
      &              POPUL0(MLEVEL,MDEPTH),PNLT(MATOM,MION,MDEPTH))              
+
+      ALLOCATE      (POPAT(MATOM,MDEPTH),FLXI(MDEPTH))
                                                                                 
       end subroutine alloc_modelp                                               
                                                                                 
@@ -319,7 +315,7 @@
       use optabl                                                                
                                                                                 
 !     ALLOCATE (tempg(mttab),densg(mttab,mrtab),elecgr(mttab,mrtab),      &     
-      ALLOCATE (tempg(mttab),elecgr(mttab,mrtab),                         &     
+      ALLOCATE (templ(mttab),tempg(mttab),elecgr(mttab,mrtab),            &     
      &         densg0(mttab),                                             &     
      &         wlgrid(mfgrid))                                                  
       ALLOCATE (absgrd(mttab,mrtab,mfgrid))                                     
@@ -372,6 +368,8 @@
                                                                                 
       ALLOCATE     (IJCMTR(MLINM,MMLIST),                                 &     
      &              NXTSEM(MMLIST),                                       &     
+     &              NUMOLI(MMLIST),                                       &     
+     &              IRLISM(MMLIST),                                       &     
      &              IPRSEM(MMLIST),                                       &     
      &              IREADM(MMLIST),                                       &
      &              ILASTM(MMLIST))      
@@ -399,7 +397,7 @@
                                                                                 
       ALLOCATE     (C(600,5),PPMOL(600),APMLOG(600),P(100),               &     
      &              XIP(100),XI2(100),CCOMP(100),UIIDUI(100),             &     
-     &              FP(100),XKP(100),XK2(100))                                  
+     &              FP(100),XKP(100),XK2(100),PNEUT(100,MDEPTH))
       ALLOCATE     (NELEM(5,600),NATO(5,600),MMAX(600),                   &     
      &              NELEMX(100))                                                
                                                                                 
@@ -522,3 +520,22 @@
      &              xlbal(nxmax),plbal(nxmax,nnmax))
 
       end subroutine alloc_allarn
+!
+!*****************************************************************
+!
+
+      subroutine alloc_diffus
+      use params
+      use diffus
+
+      ALLOCATE      (OPATM(MATOM,MAXION,MFREQ,MDEPTH),                    &      
+     &              EMATM(MATOM,MAXION,MFREQ,MDEPTH),                     &      
+     &              OPATML(MATOM,MAXION,MFREQ),                           &      
+     &              OPATMD(MATOM,MAXION,MFREQ),                           &      
+     &              EMATMD(MATOM,MAXION,MFREQ),                           &      
+     &              GRADAT(MATOM,MAXION,MDEPTH),                          &      
+     &              GRADFA(MATOM,MAXION,MDEPTH))
+
+      end subroutine alloc_diffus
+
+

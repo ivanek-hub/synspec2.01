@@ -1,4 +1,5 @@
       module accura
+
       integer,parameter::dp=selected_real_kind(15,300)
       end module accura
 
@@ -52,7 +53,8 @@
      &           MRTAB   =      20,                                       &     
      &           mfhtab  =    1000,                                       &     
      &           mtabth  =      10,                                       &     
-     &           mtabeh  =      10                                              
+     &           mtabeh  =      10,                                       &
+     &           maxion  =       6
 !                                                                               
 !     Basic physical constants                                                  
 !                                                                               
@@ -100,7 +102,7 @@
      &              INMOD,INTRPL,ICHANG,ICHEMC,IATREF,ICONTL,             &     
      &              IBLANK,NBLANK,                                        &     
      &              IPRIN,                                                &     
-     &              IGRDD,IRELIN                                                
+     &              IGRDD,IRELIN,IDIFF                                                
       REAL(DP)  ::  ALAM0,ALAST,CUTOF0,CUTOFS,RELOP,SPACE
       REAL(DP)  ::  ALM00,ALST00,ALAMBE,DLAMLO                                
       INTEGER   ::  NXTSET,INLIST,NMLIS0                   
@@ -147,7 +149,7 @@
      &              isemex(:)                                                   
       INTEGER    :: NMER                                                        
                                                                                 
-      INTEGER,ALLOCATABLE :: IEXPL(:),ILTOT(:)                                  
+      INTEGER,ALLOCATABLE :: IEXPL(:),ILTOT(:),IDMAX(:,:)
 !                                                                               
 !     Limits for explicit levels                                                
 !                                                                               
@@ -222,6 +224,7 @@
       LOGICAL,ALLOCATABLE ::  LGR(:),LRM(:)                                     
       REAL(DP),ALLOCATABLE  ::                                            &     
      &            PFSTD(:,:),RR(:,:),                                     &     
+     &            CHAREF(:,:),                                            &
      &            ENEV(:,:),AMAS(:),ABND(:),                              &     
      &            ABNDD(:,:),ABNREF(:)                                          
       CHARACTER(LEN=4),ALLOCATABLE :: TYPAT(:)                                  
@@ -311,7 +314,7 @@
      &              WOP(:,:),                                             &     
      &              WNHINT(:,:),                                          &     
      &              WNHE2(:,:),                                           &     
-     &              RRR(:,:,:),                                           &     
+     &              RRR(:,:,:),FRAION(:,:),                               &     
      &              TI0(:),                                               &     
      &              TI1(:),                                               &     
      &              TI2(:),                                               &     
@@ -319,7 +322,7 @@
      &              DOPA1(:,:)                                                  
       REAL(DP)     :: VTB                                                       
       INTEGER,ALLOCATABLE :: JT(:)                                              
-      CHARACTER(LEN=8),ALLOCATABLE :: CMOL(:)                                   
+      CHARACTER(LEN=8),ALLOCATABLE :: CMOL(:)
       REAL(DP),ALLOCATABLE ::                                             &     
      &              RRMOL(:,:),                                           &     
      &              DOPMOL(:,:),                                          &     
@@ -329,16 +332,6 @@
      &              anh2(:),anch(:),anoh(:),                              &     
      &              anhm(:)                                                     
       REAL(DP)     :: HPOP                                                      
-!                                                                               
-      REAL(DP),ALLOCATABLE ::                                             &     
-     &              OPATM(:,:,:),                                         &     
-     &              EMATM(:,:,:),                                         &     
-     &              OPATML(:,:),                                          &     
-     &              GRADAT(:,:),                                          &     
-     &              GRADFA(:,:),                                          &     
-     &              POPAT(:,:),                                           &     
-     &              DGRAD0(:,:,:),                                        &     
-     &              DGRADP(:,:,:)                                               
 !                                                                               
       REAL(DP),ALLOCATABLE ::                                             &     
      &              RAD(:,:),                                             &     
@@ -373,8 +366,8 @@
       REAL(DP),ALLOCATABLE :: FLUX(:),FLUXC(:)                                  
       REAL(DP),ALLOCATABLE :: SCC1(:),SCC2(:)                                   
                                                                                 
-      INTEGER,ALLOCATABLE :: IREFD(:)                                           
-                                                                                
+      INTEGER,ALLOCATABLE  :: IREFD(:)                                           
+
       end module modelp                                                         
                                                                                 
 !                                                                         &     
@@ -529,7 +522,7 @@
 
       REAL(DP),ALLOCATABLE :: WLGRID(:),                                  &     
      &                      ABSOP(:),WLTAB(:),ABGRD(:),XLI(:)                   
-      REAL(DP),ALLOCATABLE :: TEMPG(:),DENSG(:,:),ELECGR(:,:),            &     
+      REAL(DP),ALLOCATABLE :: TEMPL(:),TEMPG(:),DENSG(:,:),ELECGR(:,:),   &     
      &                      DENSG0(:),ELECM(:),RELABN(:),                 &     
      &                      YINT(:)                                             
       REAL(DP)             :: TEMP1                                             
@@ -573,7 +566,9 @@
      &                       NLINM0(:),                                   &     
      &                       NLINML(:),                                   &     
      &                       NLINMT(:),                                   &     
+     &                       NUMOLI(:),                                   &     
      &                       INACTM(:),                                   &     
+     &                       IRLISM(:),                                   &     
      &                       NXTSEM(:),                                   &     
      &                       IPRSEM(:),                                   &     
      &                       IREADM(:),                                   &
@@ -612,7 +607,8 @@
                                                                                 
       REAL(DP), ALLOCATABLE :: C(:,:),PPMOL(:),APMLOG(:),P(:),            &     
      &                       XIP(:),XI2(:),CCOMP(:),UIIDUI(:),            &     
-     &                       FP(:),XKP(:),XK2(:)                                
+     &                       FP(:),XKP(:),XK2(:),                         &
+     &                       PNEUT(:,:)
       REAL(DP)              :: EPS,SWITER                                       
       INTEGER,ALLOCATABLE :: NELEM(:,:),NATO(:,:),MMAX(:),                &     
      &                       NELEMX(:)                                          
@@ -674,7 +670,7 @@
       REAL(DP)              :: wpht0,wpht1                                      
                                                                                 
       integer,allocatable :: jpht(:)                                            
-      integer             :: npht                                               
+      integer             :: npht,ipht1,numfil                                               
                                                                                 
       end module photcs                                                         
                                                                                 
@@ -764,6 +760,28 @@
        integer, allocatable ::  nthxen(:),nehxen(:)
 
        end module hydxen
+!                                                                         &
+!*****************************************************************        
+!    
+
+      module diffus
+
+      use accura
+      
+      REAL(DP),ALLOCATABLE ::                                             &
+     &              OPATM(:,:,:,:),                                       &
+     &              EMATM(:,:,:,:),                                       &
+     &              opatml(:,:,:),                                        &
+     &              opatmd(:,:,:),                                        &
+     &              ematmd(:,:,:),                                        &
+     &              GRADAT(:,:,:),                                        &
+     &              GRADFA(:,:,:),                                        &
+     &              POPAT(:,:),                                           &
+     &              DGRAD0(:,:,:),                                        &
+     &              DGRADP(:,:,:)                                          
+
+      end module diffus
+
 
 
 
