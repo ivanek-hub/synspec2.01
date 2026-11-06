@@ -58,9 +58,9 @@
       implicit real(dp) (a-h,o-z),logical (l) 
 ! 
       write(*,*) 
-      write(*,*) '------------------------------------' 
-      write(*,*) 'RUN WITH syn62j GENERATED 05/23/2026' 
-      write(*,*) '------------------------------------' 
+      write(*,*) '---------------------------------------------' 
+      write(*,*) 'RUN WITH synspec2.01, LAST UPDATED 11/05/2026' 
+      write(*,*) '---------------------------------------------' 
       write(*,*) 
       OPEN(UNIT=12,STATUS='UNKNOWN') 
       OPEN(UNIT=14,STATUS='UNKNOWN') 
@@ -70,12 +70,13 @@
 !!!   call syn_alloc 
  
       CALL INITIA 
+      if(idiff.eq.1) call alloc_diffus
+
       if(ifeos.gt.0) imode=-3 
       if(ibfac.gt.1) then 
          LTE0=LTE 
          LTE=.TRUE. 
       END IF 
-!     if(imode.le.-3) write(*,*) 'imode,inmod,nd',imode,inmod,nd 
       IF(IMODE.GE.-2.AND.IFEOS.LE.0) THEN 
          IF(INMOD.GT.0) CALL INPMOD 
          IF(INMOD.EQ.0) CALL INKUR 
@@ -84,6 +85,7 @@
             CALL INPBF 
             LTE=LTE0 
          END IF 
+         IF(IFMOL.NE.0.AND..NOT.LTE) CALL IONFRA
          IF(IFWIN.GT.1) CALL SETWIN 
        ELSE 
          IDSTD=1 
@@ -105,9 +107,7 @@
          IF(IMODE0.LE.-3.and.ifeos.le.0) CALL INIBL1(IGRD) 
          IF(IFMOL.GT.0) then 
             CALL MOLINI 
-!           write(*,*) 'BEF EOSPRI in MAIN',igrd 
             if(ifeos.ne.0) call eospri 
-!           write(*,*) 'AFT EOSPRI in MAIN',igrd 
          end if 
 ! 
 !        zero abundances for selected species (if required) 
@@ -121,6 +121,7 @@
                NXTSEM(ILIST)=0 
                INACTM(ILIST)=0 
                NLINMT(ILIST)=0 
+               NUMOLI(ILIST)=0
             END DO 
          END IF 
 ! 
@@ -133,8 +134,11 @@
                   IF(IMODE.EQ.-3.AND.TEMP(1).LT.TMLIM(ILIST))             & 
      &            CALL INMOLI(ILIST) 
                   IF(IMODE.GE.-2.and.imode.le.1) CALL INMOLI(ILIST) 
-!!              write(*,*) 'after INMOLI with ilist',ilist 
                END DO 
+               write(*,"(/'========================================='/    &
+     &                    'END OF FIRST READ OF MOLECULAR LINE LISTS'/    &
+     &                    '========================================='/    &
+     &                  )")
             END IF 
          END IF 
 ! 
@@ -144,8 +148,6 @@
             IEND=0 
             BLANKLOOP: DO 
                IBLANK=IBLANK+1 
-!!        write(*,"(//' *** BEF RESOLV - IGRD,IBLANK,NBLANK,INEXT', 
-!!   *           5i8/)") igrd,iblank,nblank,inext,nd 
                IF(IFWIN.LE.0) THEN 
                   CALL RESOLV 
                 ELSE 
@@ -155,7 +157,7 @@
                   if(ifreq.le.10.and.inmod.le.1) then 
                      CALL RTECD 
                    else 
-                     call RTE 
+                     call RTE
                   END IF 
                   CALL OUTPRI 
                END IF 
@@ -164,15 +166,11 @@
                   CALL IDTAB 
                   IF(IFMOL.GT.0) CALL IDMTAB 
                end if 
-!!             write(*,"(//' *** AFT RESOLV - IBLANK,NBLANK,IEND', 
-!!   *         4i8/)") iblank,nblank,iend 
                IF(IBLANK.LT.NBLANK) THEN 
                   CYCLE BLANKLOOP 
                 ELSE 
                   IEND=1 
                END IF 
-!               write(*,"(/' *** AFTER BLANKLOOP: NXTSET,IRLIST', 
-!    *          4i8//)") nxtset,irlist,nd 
                IF(NXTSET.EQ.1.AND.IRLIST.EQ.0) THEN 
                   IF(IMODE.LT.2) THEN 
                      CALL INILIN 
@@ -181,25 +179,30 @@
                      IEND=1 
                   END IF 
                END IF 
-!               write(*,*) 'IRLIST',irlist,nd 
-               IF(IFMOL.GT.0.AND.IMODE.LT.2.AND.IRLIST.GT.0) THEN 
+               IF(IFMOL.GT.0.AND.IMODE.LT.2) THEN 
                   DO ILIST=1,NMLIST 
-!!                   write(*,*) 'ILIST,NXTSEM,INACTM',ilist, 
-!!   *               nxtsem(ilist),inactm(ilist) 
-                     IF(NXTSEM(ILIST).EQ.1.and.inactm(ilist).eq.0) THEN 
+                     IF(NXTSEM(ILIST).EQ.1.and.inactm(ilist).eq.0.        &
+     &                  AND.IRLISM(ILIST).EQ.1) THEN 
                         CALL INMOLI(ILIST) 
-                        IBLANK=0 
-!                        write(*,*) 'IBLANK in IF',iblank 
                         CYCLE BLANKLOOP 
-                       ELSE 
-                        IEND=1 
                       END IF 
                   END DO 
                END IF 
-!               write(*,*) 'IEND near end - iend,igrd',iend,igrd 
                IF(IEND.EQ.1) EXIT BLANKLOOP 
             END DO BLANKLOOP 
          END IF EOSIF 
+
+         write(*,*)
+         write(*,"(/'==========================================='/
+     &              'TOTAL NUMBERS OF MOLECULAR LINES CONSIDERED'/
+     &              '==========================================='/
+     &              'ILIST       NAME      NUMBER OF LINES'/)")
+         IF(IFMOL.NE.0.AND.IMODE.LT.2) THEN
+            DO ILIST=1,NMLIST
+               write(*,"(i4,2x,a15,i12)") 
+     &         ILIST,trim(amlist(ilist)),NUMOLI(ILIST)
+            END DO
+         END IF
 ! 
          ifin=1 
          if(imode0.lt.-2) then 
@@ -215,6 +218,10 @@
  
       if(imode0.le.-3.and.ifeos.le.0) call fingrd 
       call timing(2,iblank) 
+
+!     output of radiation forces
+!             
+      if(idiff.eq.1) call diffup 
  
       close(6) 
       close(7) 
@@ -231,6 +238,9 @@
       close(66) 
       close(67) 
       close(77) 
+      close(86)
+      close(87)
+      close(88)
  
       END PROGRAM SYNSPEC 
 ! 
@@ -585,7 +595,6 @@
       END DO 
 ! 
       CALL GETLAL 
-      write(*,*) 'after getlal'
  
       RETURN 
       END SUBROUTINE INITIA 
@@ -1083,7 +1092,7 @@
       use synthp 
       implicit real(dp) (a-h,o-z),logical (l) 
  
-      INTEGER, PARAMETER :: MVAR=77 
+      INTEGER, PARAMETER :: MVAR=78 
       INTEGER, PARAMETER :: INPFI=4 
       CHARACTER*(*) FINSTD 
       CHARACTER(LEN=80) :: TEXT 
@@ -1107,7 +1116,7 @@
      &             'IHGOM ','HGLIM ',                                     & 
      &             'ERANGE',                                              & 
      &             'ISPICK','ILPICK','IPPICK',                            & 
-     &             'IHYDDK',                                              & 
+     &             'IHYDDK','IDIFF ',                                     & 
 !-------------------------------------------------------------------------- 
      &             'IMODE ','IDSTD ','IPRIN ',                            & 
      &             'INMOD ','ICHEMC',                                     & 
@@ -1137,7 +1146,7 @@
      &             '     0',' 1.e18',                                     & 
      &             '  0.10',                                              & 
      &             '     1','     1','     1',                            & 
-     &             '     0',                                              & 
+     &             '     0','     0',                                     & 
 !-------------------------------------------------------------------------- 
      &             '     0','     0','     0',                            & 
      &             '     1','     0',                                     & 
@@ -1231,7 +1240,7 @@
      &             IHGOM ,HGLIM ,                                         & 
      &             ERANGE,                                                & 
      &             ISPICK,ILPICK,IPPICK,                                  & 
-     &             IHYDDK 
+     &             IHYDDK,IDIFF 
 !-------------------------------------------------------------------------- 
       IF(IF55.EQ.0)READ(84,*)                                             & 
      &             IMODE ,IDSTD ,IPRIN ,                                  & 
@@ -1276,6 +1285,7 @@
 ! 
 ! 
         subroutine count_words(cadena,n) 
+!       ================================
 ! 
 !       Counts the number of words separated by blanks in a string 
 ! 
@@ -1419,9 +1429,6 @@
       IFWIN=0 
       NDSTEP=0 
       if(ifeos.gt.0) return 
- 
-!!    open(iunit=55,file='fort.55',status='old',iostat=ios) 
-!!    if(ios.ne.0) return 
  
       READ(55,*,iostat=ios) IMODE,IDSTD,IPRIN 
       IF(IOS.NE.0) THEN 
@@ -2182,6 +2189,27 @@
             WRITE(6,"(A4,1P8E9.2)") TYPAT(I),(RRR(ID,J,I),J=1,MION0-1) 
          END DO 
       END DO DEPTHS 
+!
+      DO I=1,MATOM
+         DO J=1,MION0
+            RMAX=0
+            DO ID=1,ND
+               IF(RRR(ID,J,I).GE.RMAX) THEN
+                  RMAX=RRR(ID,J,I)
+                  IMAX=ID
+               END IF
+            END DO
+            IDMAX(J,I)=IMAX
+         END DO
+      END DO
+!
+!     WRITE(6,"(/a/)") 'DEPTHS OF MAXIMUM POPULATION OF INDIVIDUAL IONS'
+!     DO I=1,30
+!        write(6,"(i4,2x,6i4)") I,(IDMAX(J,I),J=1,6)
+!     END DO
+!     WRITE(6,*) 
+ 
+
 ! 
 !     2. "high-temperature" ionization fractions 
 !         (using the Opacity Project ionization fractions) 
@@ -2290,7 +2318,7 @@
             RQ=JMAX-1 
             DO J=JMAX+1,ION 
                R=R*FFI(J) 
-               RR(I,J)=R/PFSTD(J,I) 
+               RR(I,J)=R/PFSTD(J,I)
                RS=RS+R 
                RQ=RQ+(J-1)*R 
             END DO 
@@ -2300,7 +2328,7 @@
             DO JJ=1,JMAX-1 
                J=JMAX-JJ 
                R=R/FFI(J+1) 
-               RR(I,J)=R/PFSTD(J,I) 
+               RR(I,J)=R/PFSTD(J,I)
                RS=RS+R 
                RQ=RQ+(J-1)*R 
             END DO 
@@ -2313,7 +2341,18 @@
          END DO 
          RR(I,JMAX)=RR(I,JMAX)/PFSTD(JMAX,I) 
          X=RQ/RS 
-!        IF(LRM(I)) CYCLE ATOMS 
+!        IF(LRM(I)) CYCLE ATOMS
+!
+!        average charge
+!
+         charef(i,id)=0 
+         do j=1,ion
+            charef(i,id)=charef(i,id)+rr(i,j)*pfstd(j,i)*float(j-1)/
+     *         abnd(i)
+         end do
+!
+!        other useful quantities
+!
          if(i.gt.1) Q=X*ABND(I)+Q 
          anato(i,id)=rr(i,1)*pfstd(1,i) 
          pfato(i,id)=pfstd(1,i) 
@@ -2376,6 +2415,7 @@
       use lindat 
       use synthp 
       use wincom 
+      use diffus
       implicit real(dp) (a-h,o-z),logical (l) 
  
       real(dp), parameter  :: un=1. 
@@ -2384,7 +2424,7 @@
       IF(IDSTD.EQ.0) THEN 
          ID1=5 
          NDSTEP=(ND-2*ID1)/2 
-         IDSTD=2*ND/3 
+         IDSTD=2*ND/3+1 
        ELSE IF(IDSTD.LT.0) THEN 
          ID1=1 
          NDSTEP=-IDSTD 
@@ -2611,7 +2651,7 @@
          FREQ(2)=FRLAST 
 ! 
       end if 
-! 
+!
       CALL SIGAVS 
       ILIN0=0 
       IF(IHYDPR.NE.0) THEN 
@@ -2628,6 +2668,7 @@
          CALL DWNFR0(ID) 
          CALL WNSTOR(ID) 
       END DO 
+       
 ! 
 !     pretabulate expansion coefficients for the Voigt function 
 ! 
@@ -2641,6 +2682,7 @@
 !        old procedure 
 ! 
             CALL CROSET 
+!           write(*,*) 'after croset'
             DO ID=1,ND 
                CALL OPAC(ID,ABSO,EMIS,SCAT) 
                ABSTD(ID)=MIN(ABSO(1),ABSO(2)) 
@@ -2677,6 +2719,31 @@
             end if 
          end if 
       END IF 
+!
+!     
+!     initialization arrays need for evaluation of radiation forces
+!     
+      DO ID=1,ND-1
+         FLXI(ID)=0.
+      END DO
+      FLXI(ND)=0.
+!     
+      IF(IDIFF.EQ.1) THEN
+         DO IA=1,MATOM
+            DO IO=1,MAXION
+               DO ID=1,MDEPTH
+                  GRADAT(IA,IO,ID)=0.
+               END DO
+            END DO
+         END DO   
+ 
+         DO IA=1,MATOM
+            DO ID=1,ND
+               POPAT(IA,ID)=DENS(ID)/WMM(ID)*ABNDD(IA,ID)
+            END DO    
+         END DO         
+      END IF
+!                    
 ! 
       write(*,"(/'IDSTD, NDSTEP = ',2i5/)") IDSTD,NDSTEP 
       RETURN 
@@ -2821,13 +2888,9 @@
 !     set up the partial line list for the current interval 
 ! 
       CALL INISET 
-!!    write(*,*) 'after INISET - iblank,nblank',iblank,nblank 
       if(ifmol.gt.0) then 
          do ilist=1,nmlist 
-!!          write(*,*) 'before molset ilist',ilist,amlist(ilist) 
             call molset(ilist) 
-!!          write(*,*) 'after molset ilist',ilist 
-!!          write(*,*) 
          end do 
       end if 
 ! 
@@ -2840,7 +2903,7 @@
       IF(IMODE.NE.-1) CALL HE2SET 
 ! 
 !     output of information about selected lines 
-! 
+!
       CALL INIBLA 
       if(ifmol.gt.0) call iniblm 
 ! 
@@ -2853,9 +2916,7 @@
 ! 
       IF(IMODE.GE.-1) THEN 
          DO ID=1,ND 
-!!          write(*,*) 'before opac',id 
             CALL OPAC(ID,ABSO,EMIS,SCAT) 
-!!          write(*,*) 'after opac',id,abso(1),abso(2) 
             ABSTD(ID)=0.5*(ABSO(1)+ABSO(2)) 
             DO IJ=1,NFREQ 
                CH(IJ,ID)=ABSO(IJ) 
@@ -2864,7 +2925,6 @@
             END DO 
             if(imode0.eq.-4) call ougrid(abso) 
          END DO 
-!!       write(*,*) 'after all opac' 
 ! 
 !        output of information about selected hydrogen lines 
 ! 
@@ -2892,7 +2952,8 @@
 ! 
 ! ******************************************************************* 
 ! 
-      SUBROUTINE RTE 
+      SUBROUTINE RTE
+!     ============= 
 ! 
 !     solution of the radiative transfer equation by Feautrier method 
 ! 
@@ -2901,6 +2962,7 @@
       use modelp 
       use synthp 
       use lindat 
+      use diffus
       implicit real(dp) (a-h,o-z),logical (l) 
  
       REAL(DP) :: D(3,3,MDEPTH),ANU(3,MDEPTH),AANU(MDEPTH),DDD(MDEPTH),   & 
@@ -3302,6 +3364,24 @@
          RDD(ID)=AANU(ID)+DDD(ID)*RDD(ID+1) 
       END DO 
       FLUX(IJ)=FH*RDD(1) 
+!
+!     radiation forces for the individual atomic speciers
+!
+      if(ij.ge.3.and.idiff.eq.1) then
+         do id=1,nd-1
+            dt1=un/dt(id)
+            flw=(fkk(id+1)*rdd(id+1)-fkk(id)*rdd(id))*dt1*w(ij)
+            flxi(id)=flxi(id)+flw
+            do ia=1,matom
+               do io=1,maxion
+                  op0=opatm(ia,io,ij,id)
+                  if(op0.gt.0.) then
+                     gradat(ia,io,id)=gradat(ia,io,id)+op0*flw
+                  end if
+               end do
+            end do
+         end do
+      end if
 ! 
 !     if needed (if iprin.ge.3), output of interesting physical 
 !     quantities at the monochromatic optical depth  tau(nu)=2/3 
@@ -3325,7 +3405,7 @@
 !   THIRD PART  -  DETERMINATION OF THE SPECIFIC INTENSITIES 
 !   RECALCULATION OF THE TRANSFER EQUATION WITH GIVEN SOURCE FUNCTION 
 ! 
-      if(iflux.eq.0) return 
+      if(iflux.eq.0) cycle frloop
       DO IMU=1,NMU0 
       ANX=ANGL(IMU) 
       DTP1=DT(1) 
@@ -4739,10 +4819,13 @@
       use modelp 
       use lindat 
       use synthp 
+      use diffus
       implicit real(dp) (a-h,o-z),logical (l) 
  
       REAL(DP) ::  ABSO(MFREQ),EMIS(MFREQ),SCAT(MFREQ),                   & 
-     &              ABLIN(MFREQ),EMLIN(MFREQ) 
+     &              ABLIN(MFREQ),EMLIN(MFREQ),                            &
+     &              ABFAT(MATOM,MAXION),EBFAT(MATOM,MAXION),              &
+     &              AFFAT(MATOM,MAXION)
       character(len=4) :: typion(30) 
       REAL(DP),PARAMETER:: UN=1.,TEN15=1.E-15,CSB=2.0706E-16,CFF=3.694E8 
 ! 
@@ -4768,16 +4851,14 @@
       M=3 
       IF(ICONTL.EQ.1) M=1 
       mm=80 
-      k=45 
-      k=1 
+!     k=45 
+      k=1
       lpri=.false. 
 ! 
 !     Opacity and emissivity in continuum 
 !     **** calculated only in the first and the last frequency ***** 
 ! 
       CONTFRQ: DO IJ=1,IJ0 
-         lpri=id.eq.1.and.ij.eq.1 
-         lpri=.false. 
          FR=FREQ(IJ) 
          FR15=FR*TEN15 
          BNU=BN*FR15*FR15*FR15 
@@ -4786,11 +4867,21 @@
          EBF=0. 
          AFF=0. 
          al=2.997925e18/fr 
+         do ia=1,matom
+            do io=1,maxion
+               abfat(ia,io)=0.
+               ebfat(ia,io)=0.
+               affat(ia,io)=0.
+            end do
+         end do
          IONS: DO IL=1,NION 
             N0I=NFIRST(IL) 
             N1I=NLAST(IL) 
             NKE=NNEXT(IL) 
             XN=POPUL(NKE,ID) 
+            IA=NUMAT(IATM(N0I))
+            IO=MIN(IZ(IL),MAXION)
+            IO=MAX(IO,1)
 ! 
 !           Bound-free contribution + possibly 
 !            pseudo-continuum (accounting for dissolved fraction) 
@@ -4809,10 +4900,12 @@
                   END IF 
                END IF 
                if(sg.le.0.) CYCLE BFOPAC 
-               ABF=ABF+SG*POPUL(II,ID) 
+               ABF=ABF+SG*POPUL(II,ID)
+               ABFAT(IA,IO)=ABFAT(IA,IO)+SG*POPUL(II,ID)
                XX=SG*XN*EXP(ENION(II)*TK)*WOP(II,ID) 
                IF(XX.lt.conts) cycle bfopac 
                EBF=EBF+XX*CON*G(II)/G(NKE) 
+               EBFAT(IA,IO)=EBFAT(IA,IO)+XX*CON*G(II)/G(NKE)
                jj=nke 
                if(lpri.and.mod(id,mm).eq.k)                               & 
      &         write(6,"('bf',i4,i6,f10.3,2i5,2x,a4,2x,2i4,1p5e14.7)")    & 
@@ -4840,11 +4933,12 @@
                SFF=SF1*SF2 
             END IF 
             AFF=AFF+SFF 
+            AFFAT(IA,IO)=AFFAT(IA,IO)+SFF
             if(lpri.and.mod(id,mm).eq.k)                                  & 
      &      write(6,"('ffh',i4,i6,i4,2x,a4,2x,1p4e14.6)")                 & 
      &      id,ij,il,typion(il),sff,aff 
- 
          END DO IONS 
+
 ! 
 !        Additional opacities 
 ! 
@@ -4863,16 +4957,29 @@
 !        if(imode.ge.0) abso(ij)=abso(ij)+scad 
          EMIS(IJ)=BNE*(AFF+EBF)+EMAD+EMLY 
          SCAT(IJ)=SCAD+SCLY+sce 
+         if(idiff.eq.1) then
+         do ia=1,matom
+            do io=1,maxion
+               opatm(ia,io,ij,id)=abfat(ia,io)+                           &
+     &                            ane*(x1*affat(ia,io)-x*ebfat(ia,io))
+!              ematm(ia,io,ij,id)=bne*(affat(ia,io)+ebfat(ia,io))
+            end do
+         end do
+         end if
          if(lpri.and.mod(id,mm).eq.k)                                     & 
      &   write(6,"('opac1',i8,i4,1p4e14.6)") ij,id,abso(ij),              & 
      &   emis(ij),scat(ij) 
+         if(idiff.eq.1) then
+            opatm(1,1,ij,id)=opatm(1,1,ij,id)+ably
+!           ematm(1,1,ij,id)=ematm(1,1,ij,id)+emly
+         end if
+       if(lpri.and.mod(id,mm).eq.k) write(*,*) 'after opatm',ij,id
          IF(IJ.EQ.1) THEN 
             ABLY1=ABLY 
             EMLY1=EMLY 
             SCLY1=SCLY 
          END IF 
-      END DO CONTFRQ 
-!!    write(*,*) 'after cont opac' 
+      END DO CONTFRQ
  
       AVAB=(ABSO(1)+ABSO(2)+SCAT(1)+SCAT(2))*0.5*RELOP 
       IF(NFREQ.LE.2.OR.IMODE.EQ.-1) RETURN 
@@ -4886,6 +4993,17 @@
             ABSO(IJ)=FRX1(IJ)*ABSO(2)+FRX2(IJ)*ABSO(1) 
             EMIS(IJ)=FRX1(IJ)*EMIS(2)+FRX2(IJ)*EMIS(1) 
             SCAT(IJ)=FRX1(IJ)*SCAT(2)+FRX2(IJ)*SCAT(1)
+            if(idiff.eq.1) then
+            do iat=1,natom
+               ia=numat(iat)
+               do io=1,maxion
+                  opatm(ia,io,ij,id)=
+     *            frx1(ij)*opatm(ia,io,2,id)+frx2(ij)*opatm(ia,io,1,id)
+                  ematm(ia,io,ij,id)=
+     *            frx1(ij)*ematm(ia,io,2,id)+frx2(ij)*ematm(ia,io,1,id)
+               end do
+            end do
+            end if
          END DO 
 ! 
 !        hydrogen lines -- for IHYL = 0 
@@ -4896,8 +5014,14 @@
          IF(IHYL.EQ.0) THEN 
             CALL HYDLIN(ID,1,2,ABLIN,EMLIN) 
             DO IJ=M,NFREQ 
-               ABSO(IJ)=ABSO(IJ)+FRX1(IJ)*ABLIN(2)+FRX2(IJ)*ABLIN(1) 
-               EMIS(IJ)=EMIS(IJ)+FRX1(IJ)*EMLIN(2)+FRX2(IJ)*EMLIN(1) 
+               ABL=FRX1(IJ)*ABLIN(2)+FRX2(IJ)*ABLIN(1)
+               EML=FRX1(IJ)*EMLIN(2)+FRX2(IJ)*EMLIN(1)
+               ABSO(IJ)=ABSO(IJ)+ABL
+               EMIS(IJ)=EMIS(IJ)+EML
+               if(idiff.eq.1) then
+                  opatm(1,1,ij,id)=opatm(1,1,ij,id)+abl
+!                 ematm(1,1,ij,id)=ematm(1,1,ij,id)+eml
+               end if
             END DO 
          END IF 
 ! 
@@ -4907,8 +5031,6 @@
          DO IJ=3,NFREQ 
             ABSO(IJ)=ABSO(IJ)+ABLIN(IJ) 
             EMIS(IJ)=EMIS(IJ)+EMLIN(IJ) 
-!         if(ij.eq.3) write(*,"('alinop',2i4,1p3e12.3)")                  &
-!    &    ij,id,abso(ij),emis(ij),scat(ij)
          END DO 
 ! 
 !        **** Opacity and emissivity in molecular lines **** 
@@ -4934,10 +5056,11 @@
             e=emis(ij) 
             ABSO(IJ)=ABSO(IJ)+ABLIN(IJ) 
             EMIS(IJ)=EMIS(IJ)+EMLIN(IJ) 
+            if(idiff.eq.1) then
+               opatm(1,1,ij,id)=opatm(1,1,ij,id)+ablin(ij)
+!              ematm(1,1,ij,id)=ematm(1,1,ij,id)+emlin(ij)
+            end if
             al=2.997925e18/freq(ij) 
-            if(lpri.and.mod(id,mm).eq.k)                                  & 
-     &       write(6,"('tot.opac',2i5,f12.3,1p7e12.4)") ij,id,al,         & 
-     &       abso(ij),emis(ij),scat(ij),a,ablin(ij),e,emlin(ij) 
          END DO 
       END IF 
 ! 
@@ -4948,7 +5071,11 @@
          CALL HE2LIN(ID,M,NFREQ,ABLIN,EMLIN) 
          DO IJ=M,NFREQ 
             ABSO(IJ)=ABSO(IJ)+ABLIN(IJ) 
-            EMIS(IJ)=EMIS(IJ)+EMLIN(IJ) 
+            EMIS(IJ)=EMIS(IJ)+EMLIN(IJ)
+            if(idiff.eq.1) then 
+               opatm(2,2,ij,id)=opatm(2,2,ij,id)+ablin(ij)
+!              ematm(2,2,ij,id)=ematm(2,2,ij,id)+emlin(ij)
+            end if
          END DO 
       END IF 
 ! 
@@ -4973,7 +5100,7 @@
       ABSO(2)=ABSO(2)-ABLY 
       EMIS(2)=EMIS(2)-EMLY 
       SCAT(2)=SCAT(2)-SCLY 
- 
+
       RETURN 
       END SUBROUTINE OPAC 
 ! 
@@ -5930,11 +6057,6 @@
                         ABSO(IJ)=ABSO(IJ)+SG*ABTRA 
                         EMIS(IJ)=EMIS(IJ)+SG*EMTRA 
                         alm=2.997925e18/freq(ij) 
-                       xb=1.62068e-5 
-                       if(lid.and.abs(alm-1106.7).lt.0.1)                 & 
-     &                 write(6,"('hhl',f10.3,2i3,1p7e11.3)")              & 
-     &                 alm,i,j,sg,abtra,emtra,                            & 
-     &                 sg*abtra,sg*emtra*xb,abso(ij),emis(ij)*xb 
                      END DO 
                   END IF 
                END IF SPECPROF 
@@ -5949,13 +6071,6 @@
                       call lalpdk(wld,t,ane,anp,pj(1),anh2m,pr) 
                       abso(ij)=abso(ij)+pr*abtra 
                       emis(ij)=emis(ij)+pr*emtra 
-                       alm=2.997925e18/freq(ij) 
-                       xb=1.62068e-5 
-                       sg=pr 
-                       if(lid.and.abs(alm-1106.7).lt.0.1)                 & 
-     &                 write(6,"('dka',f10.3,2i3,1p7e11.3)")              & 
-     &                 alm,i,j,sg,abtra,emtra,                            & 
-     &                 sg*abtra,sg*emtra*xb,abso(ij),emis(ij)*xb 
                    end do 
                  else if(j.eq.3) then 
                    do ij=i0,i1 
@@ -5963,13 +6078,6 @@
                       call lbetdk(wld,t,ane,anp,pj(1),pr) 
                       abso(ij)=abso(ij)+pr*abtra 
                       emis(ij)=emis(ij)+pr*emtra 
-                      alm=2.997925e18/freq(ij) 
-                      xb=1.62068e-5 
-                      sg=pr 
-                      if(lid.and.abs(alm-1106.7).lt.0.1)                  & 
-     &                write(6,"('dkb',f10.3,2i3,1p7e11.3)")               & 
-     &                alm,i,j,sg,abtra,emtra,                             & 
-     &                sg*abtra,sg*emtra*xb,abso(ij),emis(ij)*xb 
                    end do 
                 end if 
             END IF NOSPECI 
@@ -8524,7 +8632,6 @@
             FRLIM=FRLI0 
             FR0=FREQ0(IL0) 
             ALAM=CNM/FR0 
-!!          write(*,*) 'il0,alam',il0,alam,alam0-cutoff,alam1+cutoff 
  
             if(ifwin.gt.0) then 
                IF(ALAMC.GT.0.) SPACE=SPACE0*ALAM/ALAMC 
@@ -8550,8 +8657,6 @@
             IF(ALAM.LT.ALAM0-CUTOFF) CYCLE LINES 
             IF(IJ.GT.NFREQS.AND.ALAM.GT.ALAM1+CUTOFF)  THEN 
                NBLANK=IBLANK+1 
-!!          write(*,"('ij,nfr,al,al+c,iblank,nblank',2i6,2f12.3,2i8)") 
-!!   *         ij,nfreqs,alam*10.,(alam1+cutoff)*10.,iblank,nblank 
                EXIT LINES 
             END IF 
 ! 
@@ -8602,25 +8707,20 @@
                   END IF 
                END IF 
                IJ=IJ+1 
-!              write(*,*) 'frq',k,ij,alact 
                IF(IJ.GT.NFREQS) EXIT FRQ 
                FREQ(IJ)=CNM/ALACT 
                W(IJ)=W(IJ)+(FREQ(IJ-1)-FREQ(IJ))*0.5 
                W(IJ-1)=W(IJ-1)+(FREQ(IJ-1)-FREQ(IJ))*0.5 
             END DO FRQ 
-!           write(*,"('EFR',3i8,1pe10.3,0pf12.3)") 
-!    *      ij,nfreqs,nfrp,alact*10.,alamcu*10. 
  
             IF(IJ.LE.NFREQS) THEN 
                IJCTR(IJ)=IL0 
-!              write(*,*) '*** ij,ijctr',ij,ijctr(ij) 
                DISTA0=DISTAN 
                CYCLE LINES 
              ELSE 
                FRMAX=FREQ(NFREQS) 
                ALAM1=CNM/FRMAX 
                NFREQ=NFREQS 
-!              write(*,*) '++++ ij,nfreqs,alam1',ij,nfreqs,alam1 
                IF(IMODE.EQ.2) EXIT LINES 
                CYCLE LINES 
             END IF 
@@ -8636,30 +8736,22 @@
             NFREQ=IJMAX 
          END IF 
  
-!!       write(*,"('end loop lines',6i8,1p2e13.5)") 
-!!   *   ij,ijmax,nfreq,nfreqs,iblank,nblank,freq(ijmax),frlast 
- 
          IF(FREQ(IJMAX).LE.FRLAST) NBLANK=IBLANK 
-!!       write(*,*) 'alm00',alm00 
-!!       write(*,*) 'alm01',freq(ijmax),0.999999*cnm/alm00 
          if(alm00.gt.0.) then 
             if(freq(ijmax).ge.0.999999*cnm/alm00.and.iblank.gt.1)         & 
      &         nblank=iblank 
          end if 
  
-!!       write(*,"(' iblank,nblank,alm00',2i8,f12.3)") 
-!!   *     iblank,nblank,alm00*10. 
 ! 
 !        correction for molecular lines 
 ! 
-!!       write(*,*) 'nmlist,ifmol',nmlist,ifmol 
          if(nmlist.gt.0.and.ifmol.gt.0) then 
             do ilist=1,nmlist 
+               irlism(ilist)=0
                if(alastm(ilist).gt.0..and.alastm(ilist).le.alact) then 
                   nblank=iblank 
                   irlist=1 
-!!              write(*,"(' MOL',i4,2f12.3,3i8/)") 
-!!   *          ilist,10.*alastm(ilist),10.*alact,iblank,nblank,irlist 
+                  irlism(ilist)=1
                end if 
             end do 
          end if 
@@ -8768,7 +8860,6 @@
             IJCNTR(IL)=IJC 
          END DO LINC 
       END IF IMODM1 
-!!    write(*,*) 'after linc' 
 ! 
       if(ifwin.gt.0) then 
 ! 
@@ -8796,19 +8887,13 @@
          ILLAST=0 
          IF(NLIN.GT.0) ILLAST=INDLIN(NLIN) 
       end if 
-!!       write(*,"('8iblank,nblank,alm00',2i8,f12.3)") 
-!!   *     iblank,nblank,alm00*10. 
 ! 
       CALL READPH 
 ! 
       IF(ALAM0.LE.APREV+0.001) NBLANK=IBLANK 
-!!       write(*,"('9iblank,nblank,alm00',2i8,f12.3)") 
-!!   *     iblank,nblank,alm00*10. 
       APREV=ALAM0 
       ALAM0=ALAM1 
       ALM00=CNM/FREQ(NFREQ) 
-!!    write(66,"('===== alam0,aprev,alm00,iblank,nblank',3f12.3,2i8)") 
-!!   *   alam0,aprev,alm00,iblank,nblank 
 ! 
       RETURN 
       END SUBROUTINE INISET 
@@ -9264,7 +9349,6 @@
      &            AGAM,GS,GW,INEXT,ISQL,ILQL,IPQL,ISQU,ILQU,IPQU 
             END IF 
          END IF 
-!         write(*,*) 'alam,anum,gf,ios',alam,anum,gf,ios 
 ! 
 !        test for the error in or end of line list 
 ! 
@@ -9291,7 +9375,6 @@
                END IF 
  
             END IF 
-!            write(*,*) 'inlist',inlist,ispick,ilpick,ippick 
 ! 
 !           change wavelength to vacuum for lambda > 2000 
 ! 
@@ -9354,7 +9437,6 @@
 ! 
                GX=GFP-EPP/TSTD 
                AB0=0. 
-!              write(*,*) 'rej',iat,ion,rrr(idstd,ion,iat) 
                if(gx.gt.-50)                                              & 
      &         AB0=EXP(GFP-EPP/TSTD)*RRR(IDSTD,ION,IAT)/DOPSTD/AVAB 
                IF(AB0.LT.UN) CYCLE READLINES 
@@ -9417,13 +9499,6 @@
 ! 
             if(ifwin.gt.0) then 
                IJCONT(IL)=IJC 
-!C             if(excl.ge.enhe2) then 
-!C                ipotl(il)=3 
-!C              else if(excl.ge.enhe1) then 
-!C                ipotl(il)=2 
-!C              else 
-!C                ipotl(il)=1 
-!C             end if 
             end if 
 ! 
 !     ****** line broadening parameters ***** 
@@ -9620,8 +9695,7 @@
       WRITE(11,*) '--------------------------------------------------' 
 ! 
       WRITE(*,*)' ---------------------------------------------------' 
-      WRITE(6,"(/' LINES - TOTAL        :',I10                            & 
-     &       /' LINES - NLTE         :',I10/)") NLIN0,NNLT 
+      WRITE(6,"(/' ATOMIC LINES - TOTAL        :',I10/)") NLIN0
       RETURN 
       END SUBROUTINE INILIN 
 ! 
@@ -9744,8 +9818,6 @@
       CUTOFF=CUTOF0 
       ALAST=CNM/FRLAST 
       absta=absoc(1) 
-!     write(6,"(/' read line list with alam0, alast',2f10.3,1p3e11.3/)") 
-!    *   alam0,alast,abstd(idstd),absta 
 ! 
       rstd=1.e4 
       if(relop.gt.0.) rstd=1./relop 
@@ -10045,7 +10117,7 @@
       DATA APB,AP0,AP1,AP2,AP3,AP4 /'    ','   .','   *','  **',' ***',   & 
      &                              '****'/ 
 ! 
-      write(12,*) 'nlin',nlin 
+!     write(12,*) 'nlin',nlin 
       IF(NLIN.EQ.0.OR.IPRIN.LE.-2) RETURN 
 ! 
       ALM0=2.997925e18/FREQ(1) 
@@ -10069,6 +10141,8 @@
          IF(ID0.GT.0.and.id0.lt.nd) ID=ID0 
          IAT=INDAT(IL)/100 
          ION=MOD(INDAT(IL),100) 
+         ID=MAX(MIN(IDMAX(ION,IAT),ND*6/7),ID)
+         
          CALL PROFIL(IL,IAT,ID,AGAM) 
          ABCNT=EXP(GF0(IL)-EXCL0(IL)/TEMP(ID))*RRR(ID,ION,IAT)*           & 
      &         STIM(ID) 
@@ -10812,7 +10886,9 @@
       use params 
       use modelp 
       use synthp 
-      use lindat 
+      use lindat
+      use diffus
+ 
       implicit real(dp) (a-h,o-z),logical (l) 
  
       REAL(DP), PARAMETER ::                                              & 
@@ -10822,12 +10898,21 @@
      &           C3     = 1.4387886,                                      & 
      &           XET    = 8067.6,                                         & 
      &           XET3   = XET*C3 
-      REAL(DP):: ABLIN(MFREQ),EMLIN(MFREQ),ABLINN(MFREQ) 
-! 
+      REAL(DP):: ABLIN(MFREQ),EMLIN(MFREQ),ABLINN(MFREQ)
+!
       DO IJ=1,NFREQ 
          ABLIN(IJ)=0. 
          ABLINN(IJ)=0. 
          EMLIN(IJ)=0. 
+         if(idiff.eq.1) then
+            do ia=1,matom
+               do io=1,maxion
+                  opatmd(ia,io,ij)=0.
+                  ematmd(ia,io,ij)=0.
+                  opatml(ia,io,ij)=0.
+               end do
+            end do
+         end if
       END DO 
 ! 
       IF(NLIN.EQ.0) RETURN 
@@ -10840,6 +10925,7 @@
          INNLT=INDNLT(IL) 
          IAT=INDAT(IL)/100 
          ION=MOD(INDAT(IL),100) 
+         io=min(ion,maxion)
          LPR=.TRUE. 
          ISP=ISPRF(IL) 
          IF(ISP.GT.1.AND.ISP.LE.5) LPR=.FALSE. 
@@ -10881,8 +10967,6 @@
             ab0=0. 
             if(pi.gt.0.) AB0=PI*(UN-UN/X)*EXP(GF0(IL))*DOP1 
          END IF 
-!        if(id.le.10) write(*,"(6i5,1p4e12.3)")                           &
-!    &   id,i,il,innlt,iat,ion,rrr(id,ion,iat),dop1,stim(id),ab0
          if(ab0.le.0.and.lasdel) CYCLE LINELOOP 
 ! 
 !        set up limiting frequencies where the line I is supposed to 
@@ -10898,7 +10982,6 @@
          IJ1=int(MAX(float(IJCNTR(I))-XIJEXT,3.)) 
          IJ2=int(MIN(float(IJCNTR(I))+XIJEXT,float(NFREQS))) 
          IF(IJ1.GE.NFREQ.OR.IJ2.LE.2) CYCLE LINELOOP 
-! 
          LTELINE: IF(INNLT.EQ.0) THEN 
 ! 
 !        ********* 
@@ -10920,8 +11003,12 @@
                    ELSE 
                      ABL=AB0*WLU*VOIGTK(AGAM,XF) 
                   END IF 
-                  ABLINN(IJ)=ABLINN(IJ)+ABL 
-                  EMLIN(IJ)=EMLIN(IJ)+ABL*PLAN(ID) 
+                  ABLINN(IJ)=ABLINN(IJ)+ABL
+                  EMLIN(IJ)=EMLIN(IJ)+ABL*PLAN(ID)
+                  IF(IDIFF.EQ.1) THEN
+                     OPATMD(IAT,1,IJ)=OPATMD(IAT,1,IJ)+ABL
+                     OPATML(IAT,1,IJ)=OPATML(IAT,1,IJ)+ABL
+                  END IF
                END DO 
              ELSE 
 ! 
@@ -10929,10 +11016,12 @@
 ! 
                DO IJ=IJ1,IJ2 
                   XF=ABS(FREQ(IJ)-FR0)*DOP1 
-                  ABLIN(IJ)=ABLIN(IJ)+AB0*VOIGTK(AGAM,XF) 
-!            if(id.le.10.and.ij.eq.3)                                     &
-!    &       write(6,"(6i5,1p7e12.3)") id,i,il,innlt,iat,ion,             &
-!    &       freq(ij),fr0,dop1,xf,agam,voigtk(agam,xf),ab0
+                  ABL=AB0*VOIGTK(AGAM,XF)
+                  ABLIN(IJ)=ABLIN(IJ)+ABL
+                  IF(IDIFF.EQ.1) THEN
+                     OPATMD(IAT,IO,IJ)=OPATMD(IAT,IO,IJ)+ABL
+                     OPATML(IAT,IO,IJ)=OPATML(IAT,IO,IJ)+ABL
+                  END IF
                END DO 
             END IF 
 ! 
@@ -10946,35 +11035,68 @@
                DO IJ=IJ1,IJ2 
                   XF=ABS(FREQ(IJ)-FR0)*DOP1 
                   ABL=AB0*VOIGTK(AGAM,XF) 
-                  ABLINN(IJ)=ABLINN(IJ)+ABL 
-                  EMLIN(IJ)=EMLIN(IJ)+ABL*SL0 
+                  ABLINN(IJ)=ABLINN(IJ)+ABL
+                  EMLIN(IJ)=EMLIN(IJ)+ABL*SL0
+                  IF(IDIFF.EQ.1) THEN
+                     OPATMD(IAT,IO,IJ)=OPATMD(IAT,IO,IJ)+ABL
+                     EMATMD(IAT,IO,IJ)=EMATMD(IAT,IO,IJ)+ABL*SL0
+                  END IF
                END DO 
 ! 
 !        again, special expressions for 4 selected He I lines 
 ! 
-             ELSE 
+            
                DO IJ=3,NFREQ 
                   FR=FREQ(IJ) 
                   ABL=AB0*PHE1(ID,FR,ISP-1) 
-                  ABLINN(IJ)=ABLINN(IJ)+ABL 
-                  EMLIN(IJ)=EMLIN(IJ)+ABL*SL0 
+                  ABLINN(IJ)=ABLINN(IJ)+ABL
+                  EMLIN(IJ)=EMLIN(IJ)+ABL*SL0
+                  IF(IDIFF.EQ.1) THEN
+                     OPATMD(IAT,1,IJ)=OPATMD(IAT,1,IJ)+ABL
+                     EMATMD(IAT,1,IJ)=EMATMD(IAT,1,IJ)+ABL*SL0
+                  END IF
                END DO 
             END IF 
          END IF LTELINE 
       END DO LINELOOP 
+!
+      DO IJ=3,NFREQ
+         EMLIN(IJ)=EMLIN(IJ)+ABLIN(IJ)*PLAN(ID)
+         ABLIN(IJ)=ABLIN(IJ)+ABLINN(IJ)
+      END DO  
+!
+!     special routine for selected He II lines
+!
+      IF(NSP.NE.0) THEN
+      DO IS=1,NSP
+         ISP=ISP0(IS)
+         IF(ISP.GE.6.AND.ISP.LE.24) CALL PHE2(ISP,ID,ABLIN,EMLIN)
+      END DO  
+      END IF
+!
+!
+!     total opacity and emissivity in atomic lines for individual IA,IO
 ! 
-      DO IJ=3,NFREQ 
-         EMLIN(IJ)=EMLIN(IJ)+ABLIN(IJ)*PLAN(ID) 
-         ABLIN(IJ)=ABLIN(IJ)+ABLINN(IJ) 
-      END DO 
-! 
-!     special routine for selected He II lines 
-! 
-      IF(NSP.EQ.0) RETURN 
-      DO IS=1,NSP 
-         ISP=ISP0(IS) 
-         IF(ISP.GE.6.AND.ISP.LE.24) CALL PHE2(ISP,ID,ABLIN,EMLIN) 
-      END DO 
+      IF(IDIFF.NE.1) RETURN
+      DO IA=1,MATOM
+         DO IO=1,MAXION
+            DO IJ=3,NFREQ
+               EMATMD(IA,IO,IJ)=EMATMD(IA,IO,IJ)+                         &
+     &                          OPATMD(IA,IO,IJ)*PLAN(ID)
+            END DO
+         END DO
+      END DO
+!
+!     opacity and emissivity for species IA,IO
+!
+      DO IA=2,MATOM
+         DO IO=1,MAXION
+            DO IJ=3,NFREQ
+               OPATM(IA,IO,IJ,ID)=OPATM(IA,IO,IJ,ID)+OPATMD(IA,IO,IJ)
+!              EMATM(IA,IO,IJ,ID)=EMATM(IA,IO,IJ,ID)+EMATMD(IA,IO,IJ)
+            END DO
+         END DO
+      END DO
 ! 
       RETURN 
       END SUBROUTINE LINOP 
@@ -11619,7 +11741,6 @@
       READ(8,*) (DEPTH(I),I=1,NDPTH) 
       notnd=0 
       if(ndpth.ne.nd) notnd=1 
-!     write(*,*) 'nd,ndpth,notnd',nd,ndpth,notnd 
       ND=NDPTH 
       NUMP=ABS(NUMPAR) 
       DO ID=1,NDPTH 
@@ -11633,8 +11754,6 @@
             wmy(id)=wmy(1) 
          end if 
          TOTN(ID)=DENS(ID)/WMM(ID)+ELEC(ID) 
-!        write(*,"('inp',i4,1p5e11.3)") id,temp(id),elec(id),dens(id),    & 
-!    &                                  totn(id),wmm(id) 
          CALL WNSTOR(ID) 
          CALL SABOLF(ID) 
          IP=NUMLT 
@@ -11656,15 +11775,11 @@
             ipri=1 
             aein=elec(id) 
             an=totn(id) 
-!        write(*,*) 'before moleq',t,an,aein 
             call moleq(id,t,an,aein,ane,ipri) 
-!        write(*,*) 'after moleq',t,an,aein,ane 
           else 
             if(imode.gt.-2) then 
                DO IAT=1,NATOM 
                   ATTOT(IAT,ID)=DENS(ID)/WMM(ID)/YTOT(ID)*ABUND(IAT,ID) 
-!                 if(id.eq.3) write(*,*) 'attot',iat,dens(id),ytot(id), 
-!    *            abund(iat,id),attot(iat,id) 
                END DO 
              else 
                DO IAT=1,NATOM 
@@ -11704,7 +11819,7 @@
       END DO 
 ! 
       close(8) 
-! 
+!
       write(6,"(/' INPUT TLUSTY MODEL'/                                   & 
      &        ' ------------------'/                                      & 
      &         8X,'MASS',9X,'T',9X,'NE',9X,'DENS',9X,'NH_1'//)") 
@@ -18494,12 +18609,14 @@
          an=dens(id)/wmm(id)+elec(id) 
          aeinit=0.1*an 
          if(t.lt.4000.) aeinit=0.01*an 
+         aeinit=elec(id)
          call moleq(id,t,an,aeinit,ane,0) 
 ! 
 !     next initial guess will be the last ane determined for 
 !     previous depth point 
  
-         aeinit=ane 
+!!       aeinit=ane 
+         aeinit=elec(id)
 ! 
          if (id.eq.idstd.and.ifeos.eq.0) then 
             write(6,                                                      & 
@@ -18842,8 +18959,6 @@
       ALAST=CNM/FRLAST 
       ALASTM(ILIST)=ALAST 
       IL=0 
-!!    write(6,"(2i5,f12.3,1pe12.3)") 
-!!   * ilist,nxtsem(ilist),alastm(ILIST),frlasm(ilist) 
       IF(NXTSEM(ILIST).EQ.1) THEN 
           ALAM0=ALM00 
           ALASTM(ILIST)=ALST00 
@@ -18858,8 +18973,6 @@
       ASTD=1.0 
       CUTOFF=CUTOF0 
       ALAST=CNM/FRLAST 
-!!    write(6,"(2i5,f12.3,1pe12.3)") 
-!!   * ilist,nxtsem(ilist),alastm(ILIST),frlasm(ilist) 
 ! 
 !     *********************************** 
 ! 
@@ -18871,8 +18984,8 @@
       IJC=2 
  
 !     write(6,*) 
-      write(*,*) '----------------------------------------------------' 
-      write(*,*) 
+!     write(*,*) '----------------------------------------------------' 
+!     write(*,*) 
 ! 
       READ1: DO 
          IF(IBIN(ILIST).EQ.0) THEN 
@@ -18882,11 +18995,13 @@
          END IF 
          IF(IOS.NE.0.OR.ALAM.GT.ALAST+CUTOFF) THEN 
             INACTM(ILIST)=1 
-            WRITE(6,"(25x,'LIST',I3,'  FILE: ',A,                         & 
-     &      '  DECLARED INACTIVE')") ILIST,TRIM(AMLIST(ILIST)) 
-            WRITE(6,"('because its first wavelength',f10.3,               & 
-     &      '  is larger than the endpoint',f10.3,' A'/)")                & 
-     &      alam*10.,(alast+cutoff)*10. 
+            write(6,"(' MOLECULAR LINES - FROM LIST:',i4,'   FILE:  ',    &
+     &      a,': DECLARED INACTIVE'/)") ILIST,trim(amlist(ilist)) 
+!           WRITE(6,"(25x,a)")  'DECLARED INACTIVE' 
+            WRITE(6,"(25x,'because its first wavelength',f10.3,           & 
+     &      '  is larger than the endpoint',f10.3/                        &
+     &      '----------------------------------------------------')")     &
+     &      alam,(alast+cutoff) 
  
             RETURN 
           ELSE IF(ALAM.LT.ALAM0-CUTOFF) THEN 
@@ -19010,10 +19125,12 @@
 !        (given by MLIN0) 
 ! 
          IL=IL+1 
+         ITRUNC=0
          IF(IL.GT.MLINM0) THEN 
-            WRITE(6,                                                      & 
-     &      "(' **** MORE LINES THAN MLINM0, LINE LIST TRUNCATED '/       & 
-     &      '       AT LAMBDA',F15.4,'  NM'/)") ALAM 
+            ITRUNC=1
+!           WRITE(6,                                                      & 
+!    &      "(' **** MORE LINES THAN MLINM0, LINE LIST TRUNCATED '/       & 
+!    &      '       AT LAMBDA',F15.4,'  NM'/)") ALAM 
             IL=MLINM0 
             ALASTM(ILIST)=CNM/FREQM(IL,ILIST)-CUTOFF 
             FRLASM(ILIST)=CNM/ALASTM(ILIST) 
@@ -19040,8 +19157,6 @@
          GFM(IL,ILIST)=real(GFP) 
          EXTINM(IL,ILIST)=real(EXTIN0) 
          INDATM(IL,ILIST)=imol 
-!         if(ilist.eq.3.or.ilist.eq.14) write(*,"(i5,2f12.4)")            & 
-!    &       il,alam,cnm/freqm(il,ilist)
 ! 
 !        ****** non-standard line broadening parameters ***** 
 ! 
@@ -19067,36 +19182,37 @@
 !     ================================== 
  
       NLINM0(ILIST)=IL 
+      NUMOLI(ILIST)=NUMOLI(ILIST)+NLINM0(ILIST)
       nlinmt(ilist)=nlinmt(ilist)+nlinm0(ilist) 
       alend(ilist)=cnm/fr0 
       if(il.gt.0) alend(ilist)=cnm/freqm(il,ilist)
 ! 
       xln=float(il)/1000 
  
+      write(6,"(' MOLECULAR LINES - FROM LIST:',i4,'   FILE:  ',a,':')")   &
+     &   ilist,trim(amlist(ilist))
       if(il.lt.100000) then 
-       write(6,"(' MOLECULAR LINES - FROM LIST:',i4,'   FILE:  ',a,':'/   & 
-     & 36x,'WITH SELECTED ',i10,'   LINES')")                             & 
-     & ilist,trim(amlist(ilist)),il 
-      else if(il.lt.1000000) then 
-       write(6,"(' MOLECULAR LINES - FROM LIST:',i4,'   FILE:  ',a,':'/   & 
-     & 36x,'WITH SELECTED ',f10.3,' K  LINES')")                          & 
-     & ilist,trim(amlist(ilist)),xln 
+       write(6,"(36x,'WITH SELECTED ',i10,'   LINES')") il 
+      else if(il.lt.1000000) then
+       write(6,"(36x,'WITH SELECTED ',f10.3,' K  LINES')") xln 
       else 
-       write(6,"(' MOLECULAR LINES - FROM LIST:',i4,'   FILE:  ',a,':'/   & 
-     & 36x,'WITH SELECTED ',f10.3,' M  LINES')")                          & 
-     & ilist,trim(amlist(ilist)),xln/1.e3 
+       write(6,"(36x,'WITH SELECTED ',f10.3,' M  LINES')") xln/1.e3 
        end if 
 !      write(6,*) 
        if(nlinm0(ilist).gt.0) then           
-!         write(6,"('LINES FOR LIST',i4,'  BETWEEN ',2f12.3)")            &
-!    &    ilist,cnm/freqm(1,ilist),alend(ilist)
           write(6,"(19x,'BETWEEN ',2f12.3)")                              &
      &    cnm/freqm(1,ilist),alend(ilist)
         else
           inactm(ilist)=1
           write(6,"(' NO SELECTED LINES - SET INACTIVE')")
        end if
-!      write(*,*) '----------------------------------------------------' 
+
+       IF(ITRUNC.EQ.1) THEN
+            WRITE(6,                                                      & 
+     &      "(' **** MORE LINES THAN MLINM0, LINE LIST TRUNCATED '/       & 
+     &      '       AT LAMBDA',F15.4,'  NM'/)") ALAM 
+       END IF
+       write(*,*) '----------------------------------------------------' 
 !      write(*,*) 
  
       RETURN 
@@ -19125,8 +19241,6 @@
 ! 
       REAL(DP), PARAMETER :: CNM=2.997925e17 
 ! 
-!     write(*,*) 'molset-ilist,inactm,alend', 
-!    *   ilist,inactm(ilist),alend(ilist) 
       if(inactm(ilist).ne.0) return 
       IL0=0 
       IPRSEM(ILIST)=0 
@@ -19140,14 +19254,12 @@
 !     skip if current wavelength larger than the largest wavelngth in the 
 !     line list 
 ! 
-!!    write(*,*)
-!!    write(*,"('MOLSET-BEG',5i6,2f10.3)")                                &
-!!   & ilist,iblank,ireadm(ilist),nlinml(ilist),ilastm(ilist),ala0,ala1 
       if(ala0.gt.alend(ilist)) then 
          inactm(ilist)=1 
-         write(6,"(/'*** LIST ',i4,' SET INACTIVE AT IBLANK ',i5)")       &
+         write(6,"(/'*** LIST ',i4,' SET INACTIVE AT IBLANK ',i5)")       &   
      &         ilist,iblank
-         write(6,"(15x,'BECAUSE ALA0 ',f12.3,' > ALEND',f12.3)")          &
+         write(6,"(15x,'BECAUSE ALA0 ',f12.3,' > ALEND',f12.3/            &
+     &        '----------------------------------------------------')")   &
      &         ala0,alend(ilist)
          return 
       end if 
@@ -19167,55 +19279,36 @@
       FRLI0=FRMINM 
       ASTD=1.0 
       AVAB=ABSTD(IDSTD)*RELOP 
-
-!     if(ilist.eq.1) write(*,"(//'******* MgH',2i5)")                     &
-!    & iblank,nlinml(ilist)
 ! 
 !     set up indices of lines 
 !     IL0 - is the current index of line in the numbering of all lines 
 ! 
       mm=3
       SELLINES: DO 
-!!       if(ilist.eq.mm) write(*,"(/'sel1',6i10)")                        &
-!!   &      ilist,ireadm(ilist),iprsem(ilist),il0,                        &
-!!   &      inmlip(iprsem(ilist),ilist),nlinml(ilist)
-!!       IF(ilist.eq.mm.and.IPRSEM(ILIST).GT.10) STOP
          IF(IREADM(ILIST).EQ.1) THEN 
             IPRSEM(ILIST)=IPRSEM(ILIST)+1
             if((iprsem(ilist).le.nlinml(ilist).and.nlinml(ilist).gt.0)    &
      &         .or.nlinml(ilist).eq.0) then 
                IL0=INMLIP(IPRSEM(ILIST),ILIST) 
-!!             if(ilist.eq.mm) write(*,"('sel2',5i10,2f10.3)")            &
-!!   &         ilist,ireadm(ilist),iprsem(ilist),il0
             end if
             if(nlinml(ilist).eq.0) il0=ilastm(ilist)
             IF(FREQM(IL0,ILIST).LT.FRMINM.                                &
      &      or.iprsem(ilist).gt.nlinml(ilist).and.nlinml(ilist).gt.0)     &
      &      THEN 
-!!             if(ilist.eq.mm)                                            &
-!!   &         write(*,"('sel4',3i8)") ilist,                             &
-!!   &         INMLIP(IPRSEM(ILIST)-1,ILIST),il0
                IREADM(ILIST)=0 
 !!             if(ilist.eq.mm) write(*,"('sel5',i8)")
 !!   &         IPRSEM(ILIST)-1
                IL0=INMLIP(IPRSEM(ILIST)-1,ILIST)+1 
-!!             if(ilist.eq.mm) write(*,"('sel6',2i8)") ilist,il0
             END IF 
           ELSE 
             IL0=IL0+1 
-!!          if(ilist.eq.mm) write(*,"('sel7',2i8)") ilist,il0
          END IF 
-!!       if(ilist.eq.mm) write(*,"('SELF',5i10)")                         &
-!!   &    ilist,ireadm(ilist),iprsem(ilist),il0,nlinm0(ilist)
          IF(IL0.GT.NLINM0(ILIST)) EXIT SELLINES 
          FRLIM=FRLI0 
          FR0=FREQM(IL0,ILIST) 
          ALAM=CNM/FR0 
          if(il0.eq.nlinm0(ilist).and.alam.lt.ala0) exit sellines
          if(il0.gt.ilastm(ilist)) ilastm(ilist)=il0
-!!       if(ilist.eq.mm)                                                  &
-!!   &    write(*,"('==before sel',i5,f12.3)") il0,alam
-!        if(ilist.eq.mm) write(*,*) 'SiH',il0
 ! 
          IF(ALAM.LT.ALA0-CUTOFF) CYCLE SELLINES 
          IF(ALAM.GT.ALA1+CUTOFF) EXIT SELLINES 
@@ -19225,8 +19318,6 @@
          EXT=EXTINM(IL0,ILIST) 
          FRLI0=FR0-EXT-SPAC 
          IF(FRLI0.GT.FRLIM) FRLI0=FRLIM 
-!!       if(ilist.eq.mm) write(*,"(i6,1p8e12.4)")                         &
-!!   &   il0,fr0,ext,alam,ala0,fr0-frminm,ext+spac
          IF(ALAM.LT.ALA0.AND.FR0-FRMINM.GT.EXT+SPAC) CYCLE SELLINES 
          IF(FREQ(NFREQS)-FR0.GT.EXT+SPAC) CYCLE SELLINES 
 ! 
@@ -19236,7 +19327,6 @@
             call quit('too many molecular lines in a set') 
          end if 
          INMLIN(NLINM,ILIST)=IL0 
-!!       if(ilist.eq.mm) write(*,*) '** after sel.',il0,nlinm,alam 
       END DO SELLINES 
 ! 
 !     frequency indices of the line centers 
@@ -19290,7 +19380,6 @@
       END DO 
       NLINML(ILIST)=NLINM 
       IMLAST=INMLIN(NLINML(ILIST),ILIST) 
-!!     write(6,"(70x,'ILIST,NLINM,IMLAST',3i7)") ilist,nlinm,imlast
 
       if(nlinm.eq.0.and.alend(ilist).lt.ala0) then
          inactm(ilist)=1
@@ -19301,7 +19390,6 @@
       end if
 ! 
       CALL INIBLM 
-!      write(*,*) 'after iniblm'
 ! 
       RETURN 
       END SUBROUTINE MOLSET 
@@ -19482,8 +19570,6 @@
          EMLIN(IJ)=0. 
       END DO 
 ! 
-!     write(*,*) 'molop-ilist,nlinml,inactm',ilist,nlinml(ilist), 
-!    *            inactm(ilist) 
       if(temp(id).gt.tmolim) return 
       IF(NLINML(ILIST).EQ.0) RETURN 
       if(inactm(ilist).ne.0) return 
@@ -19707,21 +19793,6 @@
       integer        :: indtsu(324) 
       integer, save  :: irw(500), nummol 
  
-!     data indtsu / 2,  5, 12, 4, 8, 7, 6, 
-!    *              9, 11, 10, 29, 50, 59, 46, 132, 52, 19, 
-!    *             13, 42, 38, 39, 37, 44, 36, 14, 118, 33, 
-!    *              3, 16, 57, 32, 49, 60, 54, 41, 107,  0, 
-!    *            148, 152, 153, 155, 0, 17, 24, 25, 28, 51, 
-!    *            112, 119,   0,   0,21, 15, 43, 56,  0, 64, 
-!    *             47,  65,   0,  61, 0, 62,118, 40, 66/ 
-!     data indtsu / 2,  5, 12, 4, 8, 7, 6, 
-!    *              9, 11, 10, 29, 50, 59, 46, 132,  52, 19, 
-!    *             13, 42, 38, 39, 37, 44, 36,  14, 117, 33, 
-!    *              3, 16, 57, 32, 49, 60, 54,  41, 106,303, 
-!    *            147, 151, 152, 154, 302, 17,  24,  25, 28, 51, 
-!    *            111, 118, 102,   0,  21, 15,  43,  56,478, 64, 
-!    *             47,  65, 413,  61, 190, 62 ,108,  40, 66,214, 
-!    *             257*0./ 
       data indtsu / 2,  5, 12, 4, 8, 7, 6,                                & 
      &              9, 11, 10, 29, 50, 59, 46, 133,  52, 19,              & 
      &             13, 42, 38, 39, 37, 44, 36,  14, 118, 33,              & 
@@ -19926,6 +19997,9 @@
         DO I=1,NMETAL 
            NELEMI=NELEMX(I) 
            P(NELEMI)=1.e-70_dp 
+           DO IDD=1,ND
+              PNEUT(NELEMI,ID)=P(NELEMI)
+           END DO
         END DO 
         iread=0 
       endif 
@@ -19940,8 +20014,8 @@
         TEM=tt 
         PGLOG=log10(Pgas) 
         PG=Pgas 
-! 
-        CALL RUSSEL(TEM,PG) 
+!
+        CALL RUSSEL(ID,TEM,PG) 
 ! 
         PE=P(99) 
         ane=pe*tk 
@@ -20048,10 +20122,6 @@
            pfmol(j,id)=umoll 
            atot=atot+anden(jm) 
 ! 
-!         if(id.eq.1)                                                     & 
-!    &    write(6,"(i5,a8,2f10.3,1p2e12.4,0pf12.3,1p2e12.4)")             & 
-!    &          j,cmol(j),apmlog(j),pmoll,anden(jm),umoll,                & 
-!    &          amasm,tmass,atot 
         END DO 
  
         jm=2*nmetal 
@@ -20093,8 +20163,8 @@
 ! ************************************************************************* 
 ! 
 ! 
-      SUBROUTINE RUSSEL(TEM,PG) 
-!     ========================= 
+      SUBROUTINE RUSSEL(ID,TEM,PG) 
+!     ============================ 
 ! 
       use accura 
       use params 
@@ -20214,6 +20284,7 @@
       DO I=1,NMETAL 
          NELEMI=NELEMX(I) 
          FP(NELEMI)=CCOMP(NELEMI)*FPH 
+         if(id.eq.1) p(nelemi)=pneut(nelemi,id)
       END DO 
 ! 
       PE=P(99) 
@@ -20224,8 +20295,9 @@
       RUSS: DO 
         DO I=1,NMETAL 
            NELEMI=NELEMX(I) 
-!          FX(NELEMI)=-FP(NELEMI)+P(NELEMI)*(1.0+XKP(NELEMI)/PE) 
+           FRA=FRAION(NELEMI,ID)
            DFX(NELEMI)=1.0+XKP(NELEMI)/PE*(1.0+XK2(NELEMI)/PE) 
+           IF(.NOT.LTE.AND.FRA.GT.0.) DFX(NELEMI)=1.0+FRA
            FX(NELEMI)=-FP(NELEMI)+P(NELEMI)*DFX(NELEMI) 
         END DO 
 ! 
@@ -20255,10 +20327,7 @@
                     SPNION=SPNION+PMOLJ*NATOMJ 
                   else 
                     SPNPLU=SPNPLU-PMOLJ*NATOMJ 
-                 end if 
-!             if(lpri) 
-!    *        write(6,"('ion',3i5,a8,1p4e15.5)") 
-!    *        niterr,j,m,cmol(j),p(99),pmolj,spnplu,spnion 
+                 end if
               end if 
               DO I=1,NMETAL 
                  NELEMI=NELEMX(I) 
@@ -20270,10 +20339,6 @@
               END DO 
            END DO 
            PPMOL(J)=PMOLJ 
-!          if(tem.lt.3650.) 
-!    *     write(66,"(2i4,a8,i3,2f10.3,2x,5(2i3,f8.2,2x))") 
-!    *     niterr,j,cmol(j),mmaxj,apmlog(j),pmoljl, 
-!    *     (nelem(m,j),nato(m,j),log10(p(nelem(m,j))),m=1,mmaxj) 
  
         END DO 
 ! 
@@ -20309,13 +20374,8 @@
         END DO 
 ! 
         perev0=perev 
-!       write(6,601) niterr,perev0,spnion,pe,spnion/pe 
         PEREV=SQRT(PEREV/(1.0+SPNION/PE)) 
         DELTRS=DELTRS+ABS((PE-PEREV)/PE) 
-!       if(iprin.gt.4) 
-!    *     write(6,601) niterr,tem,pg*tk,fph*tk,pe*tk,perev*tk, 
-!    *    (perev+pe)*0.5*tk,deltrs 
-!       PE=(PEREV+PE)*0.5 
         pe=perev 
         P(99)=PE 
         IF(DELTRS.LE.EPS) THEN 
@@ -20325,14 +20385,20 @@
            IF(NITERR.LE.NIMAX) THEN 
               CYCLE RUSS 
             ELSE 
-              WRITE(6,"('*DOES NOT CONVERGE AFTER ',I4,' ITERATIONS')")   & 
-     &        NIMAX 
+!!            WRITE(6,"('*DOES NOT CONVERGE AFTER ',I4,' ITERATIONS')")   & 
+!!   &        NIMAX 
             EXIT RUSS 
            END IF 
         END IF 
-      END DO RUSS 
+      END DO RUSS
+
+      DO I=1,NMETAL
+         NELEMI=NELEMX(I)
+         PNEUT(NELEMI,ID)=P(NELEMI)
+      END DO
+       
 ! 
-      if(iprin.ge.4) then 
+      if(iprin.ge.4) then
          write(6,"('russel iterations ',i4,1p7e13.4)")                    & 
      &      niterr,tem,pg*tk,fph*tk,pe*tk,perev*tk,                       & 
      &      (perev+pe)*0.5*tk,deltrs 
@@ -20516,7 +20582,6 @@
             uion=log10(uion) 
             corr=conl+uato-uion-2.5*log10(t)+5039.9*xip(nat)/t 
             apmlog(j)=aplogj+corr 
-!          write(*,"(i4,3f11.3)") j,aplogj,corr,apmlog(j) 
             cycle molloop 
          end if 
 ! 
@@ -20555,7 +20620,6 @@
             uion=log10(uion) 
             corr=-conl+uato-uion+2.5*log10(t)-5039.9*eaf(nat)/t 
             apmlog(j)=aplogj+corr 
-!          write(*,"(i4,3f11.3)") j,aplogj,corr,apmlog(j) 
          end if 
       end do molloop 
  
@@ -22975,7 +23039,7 @@
             pp=pj(2)*8. 
          end if 
 ! 
-         F15=FR*1.E-15 
+         F15=FR*1.E-15
          XKF=EXP(-4.79928e-11*FR/TEMP(ID)) 
          XKFB=XKF*1.4743E-2*F15*F15*F15 
  
@@ -23018,7 +23082,6 @@
       implicit real(dp) (a-h,o-z),logical (l) 
  
       real(dp), parameter :: un=1.,ten15=1.e-15,c18=2.997925e18 
-      real(dp) :: templ(mdepth)
 ! 
 !     -------------- 
 !     initialization 
@@ -23034,9 +23097,8 @@
           else
             mttab=ntemp
          end if
-!        write(*,*) 'ntemp,temp1,mttab',ntemp,temp1,mttab
          allocate (densg(mttab,mrtab),nden(mttab))
-
+        
          read(2,*) idens 
          if(idens.lt.10) then 
             read(2,*) ndens,dens1,dens2 
@@ -23060,7 +23122,7 @@
             read(2,*) tabname,ibingr 
          end if
 !
-         write(6,"(/'INPUT PATRAMETERS FO R THE OPACITY TABLE',           &
+         write(6,"(/'INPUT PATRAMETERS FOR THE OPACITY TABLE',            &
      &              ' (from file fort.2)'/                                &
      &              '----------------------------------------'/           &
      &   'nfgrid  =',i8/                                                  &
@@ -23136,7 +23198,6 @@
 ! 
             write(6,"(/' COMPUTING AN OPACITY TABLE WITH GRID ',          & 
      &      'PARAMETERS:'/' ===== ntemp, ndens ',2i4)") ntemp,nden(1) 
-            write(*,*) 'ntemp,ndens',ntemp,nden(1) 
             do i=1,ntemp 
                ndens=nden(i) 
                write(6,"(f10.1,20f8.2)")                                  & 
@@ -23151,14 +23212,12 @@
  
             ntemp=nd 
             ndens=1 
-!           write(*,*) 'ntemp,ndens',ntemp,ndens 
             do it=1,ntemp 
                tempg(it)=temp(it) 
                densg0(it)=dens(it) 
                densg(it,1)=dens(it) 
                elecm(it)=elec(it) 
                nden(it)=ndens 
-!            write(*,*) it,tempg(it),densg(it,1),elecm(it),nden(it) 
             end do 
             if(ifeos.le.0) then 
                write(6,"(/' COMPUTING AN OPACITY TABLE WITH ',            & 
@@ -23244,8 +23303,6 @@
 ! 
          nfr=ipfreq 
          nfrtab(indext,indexn)=ipfreq 
-!        write(*,*) 'indext,indexn,nfreq',indext,indexn,ipfreq 
-!        write(*,"(/'NFR,NFGRID:',2i10)") nfr,nfgrid,inttab 
          if(inttab.eq.1) then 
 !        call interp(wltab,absop,wlgrid,abgrd,nfr,nfgrid,2,0,0) 
             call intrp(wltab,absop,wlgrid,abgrd,nfr,nfgrid) 
@@ -23810,8 +23867,6 @@
          ane0=anerel*an 
          call eldens(id,t,an,ane,anh,anp) 
          anerel=ane/an 
-!!       write(6,"(/' **** rhonen it,id,t,r,N,Ne,wmm,ner',2i4,f7.0, 
-!!   *    1p5e11.4)") it,id,t,rho,an,ane,wmm(id),anerel 
          if(abs((ane-ane0)/ane0).lt.1.e-5) exit 
          if(it.lt.50) cycle 
       end do 
@@ -24093,6 +24148,7 @@
       use eospar 
       implicit real(dp) (a-h,o-z) 
  
+      integer, parameter :: nmetae=38
       integer  :: neleme(38),insm(20) 
       real(dp) :: amh2(5),xml(20) 
       data neleme/ 1, 2, 3, 4, 5, 6, 7, 8, 9,                             & 
@@ -24109,7 +24165,6 @@
       istp=1 
       if(ifeos.lt.0) istp=-ifeos 
 ! 
-      write(*,*) 'id,nd,istp,idstd',id,nd,istp,idstd 
       do id=1,nd,istp 
          t=temp(id) 
          ane=elec(id) 
@@ -24121,23 +24176,16 @@
             itera: do 
                ann0=ann 
                it=it+1 
-            write(*,*) 'BE:id,it,t,ann,ane',id,it,t,ann,ane 
                call eldens(id,t,ann,ane,anh,anp) 
-            write(*,*) 'AF:id,it,t,ann,ane',id,it,t,ann,ane 
-            write(*,*) 'id,it,anh,anp',id,it,anh,anp 
                anmol(1,id)=anhmi 
                anmol(2,id)=ahmol 
                anato(1,id)=anh 
                anion(1,id)=anp 
                hpop=dens(id)/wmy(id)/hmass 
-           write(*,*) 'anh,hpop',anh,hpop,nmetal 
-           write(*,*) 'neleme',neleme(1) 
-               do i=1,nmetal 
+               do i=1,nmetae 
                   j=neleme(i) 
- 
                   anato(j,id)=anato(j,id)*hpop 
                   anion(j,id)=anion(j,id)*hpop 
-             write(*,*) i,j,id,anato(j,id),anion(j,id) 
                   if(j.ge.2.and.j.le.30) anion2(j,id)=anion2(j,id)*hpop 
                end do 
                anato(1,id)=anh 
@@ -24148,7 +24196,6 @@
             end do itera 
          end if 
 ! 
-         nmetae=38 
          write(6,"(' **** DEPTH ID',i4,'  T =',f10.1/)") id,temp(id) 
          write(*,*) '' 
          write(*,*) 'atomic number densities and partition functions' 
@@ -25190,7 +25237,6 @@
          if(indmol.gt.0) then 
             call bcdata(indmol,1,t,ulog) 
             u=ulog 
-!           write(*,*) 'pfmol',indmol,t,ulog 
             return 
           else 
             tl=6.9077553 
@@ -25728,7 +25774,6 @@
       write(*,*) 
       do itb=1,ntab 
          call initabdk(itb,dkfile(itb)) 
-!        write(*,*) 'reading Koester table:',dkfile(itab) 
       end do 
       return 
       end subroutine dkini 
@@ -25764,14 +25809,10 @@
          read(iun,*) tabden(itab,iden),numlam(itab,iden),                 & 
      &               numtem(itab,iden),                                   & 
      &               (tabtem(itab,item,iden),item=1,numtem(itab,iden)) 
-!        write(*,*) 'iden,tabden(itab,iden)',iden,tabden(itab,iden) 
-!        write(*,*) '   numlam',numlam(itab,iden) 
-!        write(*,*) 'numtem',numtem(itab,iden) 
         do ilam=1,numlam(itab,iden) 
             read(iun,*) tablam(itab,ilam,iden),                           & 
      &      (prftab(itab,ilam,item,iden),item=1,numtem(itab,iden)) 
         end do 
-!        write(*,*) 'numlam',numlam(itab,iden) 
       end do 
       close(iun) 
       return 
@@ -25811,15 +25852,12 @@
       jl2=jl1+1 
       fl2=fl 
       fl1=1.-fl2 
-!      write(*,*) 'jl1,jl2,fl2',jl1,jl2,fl2 
-!      write(*,*) 'wl1(jl1),wl1(jl2)',wl1(jl1),wl1(jl2),wl0 
       do item=1,numtem(itab,jd1) 
          tl1(item)=tabtem(itab,item,jd1) 
       end do 
       call locat(tl1,numtem(itab,jd1),tt0,jt,ft) 
       jt1=jt 
       jt2=jt1+1 
-!      write(*,*) 'jt1,jt2,ft',jt1,jt2,ft 
       ft2=ft 
       ft1=1.-ft2 
       pr11=fl1*prftab(itab,jl1,jt1,jd1)+fl2*prftab(itab,jl2,jt1,jd1) 
@@ -26282,7 +26320,83 @@
       molind(1953)=426 
  
       end subroutine molindx 
- 
+
+!
+! ********************************************************************
+!
+!
+
+      SUBROUTINE IONFRA
+!     =================
+!
+!     compute the ratio of ions to neutrals (only for NLTE models)
+!
+      use accura
+      use params
+      use modelp
+      implicit real(dp) (a-h,o-z),logical (l)
+
+      write(*,*) '***** IONFRA *****'
+!     IF(LTE) THEN
+         DO ID=1,ND
+            DO I=1,MATOM
+               FRAION(I,ID)=0.
+            END DO
+         END DO
+!      ELSE
+         DO IAT=1,NATOM
+            N0I=N0A(IAT)
+            NKI=NKA(IAT)
+            IATN=NUMAT(IATM(N0I))
+            DO ID=1,ND
+               POPATO=0.
+               POPION=0.
+               DO I=N0I,NKI
+                  IZI=IZ(IEL(I))
+                  IF(IZI.EQ.1) THEN
+                     POPATO=POPATO+POPUL(I,ID)
+                   ELSE IF(IZI.GT.1) THEN
+                     POPION=POPION+POPUL(I,ID)
+                  END IF
+               END DO
+               anh=dens(id)/wmm(id)/ytot(id)
+               abu=abund(iat,id)
+               tk=1.38054e-16*temp(id)
+               ph=anh*tk
+               t=temp(id)
+               call irwpf(iatn,1,0,t,q0)
+               call irwpf(iatn,2,0,t,q1)
+               fra0=q1/q0*4.83e15*exp(-11605./t*enev(iatn,1))
+     &             *t**1.5/elec(id)
+               IF(POPATO.GT.0.) FRAION(IATN,ID)=POPION/POPATO
+            END DO
+         END DO
+!     END IF
+
+      END SUBROUTINE IONFRA
+
+
+
+!
+!     ******************************************************
+!
+      SUBROUTINE DIFFUP
+!     =================
+!
+!     store radiation accelerations
+!
+      use accura
+      use params
+      use diffus
+
+      do id=1,nd,2
+         do ia=1,30
+            write(41,"(2i4,1p6e11.3)")                                      &
+     &         id,ia,(gradat(ia,io,id),io=1,6)
+         end do
+      end do
+
+      end subroutine diffup
 ! 
 !     ****************************************************** 
 ! 
