@@ -1,0 +1,41 @@
+This directory contains several utility programs. Their detailed description is in the
+cated in three subdirectpties:
+
+1) directory exo2syn (standing for EXOMOL to SYNSPEC transfer of data)
+====================
+
+Contains the following programs, described in the Mqanual):
+
+- list.f: the program extracts line data for particular isotopologue of a molecule from
+the EXOMOL database, and outputs them in the SYNSPC format.
+
+- reverse.f: a simple program that reverses the order of wavelengths from decreasing 
+(in EXOMOL))to increasing (in Synspec)
+
+- merge.f: merging two line lists
+
+- subdirectory pfsum_data, containing a collection of input data for pfsum.
+
+2) directory EOSPROG
+====================
+
+Contains the following programs, described in Paper V:
+
+
+- chemeq.f: chemical eqilibtium/equation of state solution
+- eos_modules.f: auxiliary program for chemeg
+- eos_alloc.f:   auxiliary program for chemeq	
+- isotops:       file with solar isotope fractions, needed for chemeq.f 
+
+- eos.py: a Python program for displaying the results of chemeq.f. User instructions
+and explanations are given at the header of the program.
+
+
+3) directory LISTHANDL
+=====================
+
+Contains 3 simple line-list-handling programs, described in Paper IV:
+
+- redulis:  reducion of an original line list be removing weak lines
+- list2bin: transformation of a line list to a binnary format
+- list2mini: transpornation of a molecular line list to a "minimalistic" format
