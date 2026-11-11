@@ -7,7 +7,7 @@ One can use the included script file R1, One can modify it
 by uncommenting the line
 #cp fort.55.lin fort.55, 
 or leaving this line and deleting the file "kwords".
-The reults will be very similar, but snall differences will be 
+The reults will be very similar, but small differences are 
 due to different settings of the characteristic depth
 (depth IDSTD=34 in the case of using fort.55, and default
 values of 3 characteristic depth if IDSTAD has its default
