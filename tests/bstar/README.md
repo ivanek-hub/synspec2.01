@@ -6,7 +6,7 @@ the BSTAR2007 grid (Lanz & Hubeny 2007), a model with 20,000 K, and log *g* = 4.
 One can use the included script file *R1*.  
 Notice that the command 
 
-*cp fort.55.lin fort.55* 
+*#cp fort.55.lin fort.55* 
 
 is commented out, so the file *fort.55* is absent. This demonstrates the new system of input the keyword parameter, which are now
 taken from the file *kwords* or, if not specified there, assume their default values.
