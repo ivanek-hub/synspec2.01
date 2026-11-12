@@ -11,8 +11,7 @@ they must exist. In the case the binary lists are not used, the user
 should make links to the ASCII files, and to make corresponding changes in
 the file *fort.3*, namely
 
-'gfATO.dat'          0 
-
+'gfATO.dat'          0 //
 'gfMOL.dat'          0    8000. 
 
 'gfTiO.dat'          0    5000.
