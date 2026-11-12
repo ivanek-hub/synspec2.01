@@ -59,3 +59,22 @@ Contains three groups of utility programs in individual subdirectories: <br>
 > eosprog - an exploratory equation-of-state solution, plus a Python program for the corresponding graphical display <br>
 > exo2syn - a suite of programs to generate isotope-averaged molecular partition functions and line lists  from EXOMOL data <br>
 > listhandl - short programs for handling (reducing) line lists
+>
+> ## Graphical user interface
+
+
+* *SYNPLOT* -- is an IDL wrapper
+to prepare the necessary input files, run the code, possibly perform rotational
+and instrumental convolutions, plot the results, and optionally provides
+graphical line identifications.
+
+The  new variant of [SYNPLOT](https://owncloud.iac.es/index.php/s/0CO8xQYTZXjJpxN)
+works in IDL and  GDL.
+
+
+
+* *SYNPLE* -- is a Python wrapper. It is similar to *SYNPLOT*, with several important differences.
+[SYNPLE](https://github.com/callendeprieto/synple)
+ can take as input *MARCS*, Kurucz, *PHOENIX*, and *TLUSTY* model atmospheres, and is designed to be useful to researchers that are not experts in stellar atmospheres and radiative transfer. It facilitates  performing massive spectral synthesis calculations for large grids, parallelizing the calculations over multiple cores, using the Python libraries *multiprocessing* or *ray*,  and multiple processors, setting up scripts to run SYNSPEC  on distributed-memory  computers.
+It includes as well a routine for fitting observed spectra using precomputed grids of
+synthetic spectra. 
