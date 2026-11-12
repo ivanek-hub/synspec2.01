@@ -33,28 +33,22 @@ For convenience, the directory *docs* also presents a four-volume series of pape
 
 There are five basic directories:
 
-* data: 
+* data <br> 
+Contains a collection of needed atomic data files, partition functions for atoms and molecules, and molecular equilibrium constants
 
-: Contains a collection of needed atomic data files, partition functions for atoms and molecules, and molecular equilibrium constants
-
-* docs
-
+* docs <br>
 Contains the documentation, as specified above
 
-* source
-
-: Contains the source code, inj three separate files: \br
-*synspec2.01.f* \br
-*syn_modules.f* \br
-*syn_alloc.f*
-
+* source <br>
+Contains the source code, in three separate files: <br>
+*synspec2.01.f* <br>
+*syn_modules.f* <br>
+*syn_alloc.f* <br>
 together with the *makefile* file
 
-* tests
+* tests <br>
+Contains four different test cases that illustrate a usage of Synspec in various applications. For each test case we present the script to run the test, the input files, and the subdirectory with the results of the test that can be compared to the result the user obtains, to verify a proper installation of the program and the data.
 
-: Contains four different test cases that illustrate a usage of Synspec in various applications. For each test case we present the script to run the test, the input files, and the subdirectory with the results of the test that can be compared to the result the user obtains, to verify a proper installation of the program and the data.
 
-
-* utils
-
-: Contains three groups of utility programs, described inside the directory.
+* utils <br>
+Contains three groups of utility programs, described inside the directory.
