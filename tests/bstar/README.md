@@ -1,19 +1,15 @@
 The directory contains input files for a test case of computing
 a very short chunk of synthetic spectrum (1400-1410 A) 
 for a NLTE metal line-blanketed model atmosphere from 
-the BSTAR2007 grid (Lanz & Hubeny 2007), a model with 20,000 K, and log *g* = 4.
+the BSTAR2007 grid (Lanz & Hubeny 2007), a model with *T*<sub>eff</sub>=+ 20,000 K, and log *g* = 4.
 
 One can use the included script file *R1*.  
-Notice that the command 
-
-*#cp fort.55.lin fort.55* 
-
+Notice that the command <br>
+*#cp fort.55.lin fort.55* <br>
 is commented out, so the file *fort.55* is absent. This demonstrates the new system of input the keyword parameter, which are now
 taken from the file *kwords* or, if not specified there, assume their default values.
-For details, refer to the Manual. To recover the old system, one uncomments the line
-
-*cp fort.55.lin fort.55*
-
+For details, refer to the Manual. To recover the old system, one uncomments the line <br>
+*cp fort.55.lin fort.55* <br>
 and delete the file *kwords*.
 
 The results of both runs are very similar, but small differences appear
