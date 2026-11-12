@@ -41,9 +41,9 @@ Contains the documentation, as specified above
 
 * source <br>
 Contains the source code, in three separate files, plus the Make file: <br>
-> *synspec2.01.f* <br>
-> *syn_modules.f* <br>
-> *syn_alloc.f* <br>
+> *synspec2.01.f* - main part: a collection of executive routines <br>
+> *syn_modules.f* - a collection of modules <br>
+> *syn_alloc.f* - a collection of array allocation routines <br>
 > *makefile* 
 
 * tests <br>
@@ -55,7 +55,7 @@ Contains four different test cases that illustrate the usage of Synspec in vario
 
 
 * utils <br>
-Contains three groups of utility programs: <br>
+Contains three groups of utility programs in individual subdirectories: <br>
 > eosprog - an exploratory equation-of-state solution, plus a Python program for the corresponding graphical display <br>
-> exo2syn - a suite of programs to generate isotope-averaged molecular partition functions and line lists  from EXOMOL datain the SYNSPEC format <br>
+> exo2syn - a suite of programs to generate isotope-averaged molecular partition functions and line lists  from EXOMOL data <br>
 > listhandl - short programs for handling (reducing) line lists
