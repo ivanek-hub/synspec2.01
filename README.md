@@ -66,8 +66,7 @@ Contains three groups of utility programs in individual subdirectories: <br>
 * *SYNPLOT* -- is an IDL wrapper
 to prepare the necessary input files, run the code, possibly perform rotational
 and instrumental convolutions, plot the results, and optionally provides
-graphical line identifications.
-
+graphical line identifications. <br>
 The  new variant of [SYNPLOT](https://owncloud.iac.es/index.php/s/0CO8xQYTZXjJpxN)
 works in IDL and  GDL.
 
