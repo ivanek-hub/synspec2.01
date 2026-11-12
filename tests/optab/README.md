@@ -18,3 +18,12 @@ the file *fort.3*, namely
 'gfTiO.dat'          0    5000.
 
 in which case the text (ASCII) format of line lists is used. 
+
+For actual applications, more extend wavelength range, and a higher resolutions in temperature and
+density are obviously needed. To show a construction of such opacity table (with better, but still
+quite modest resolutions), we include two optional input files, to be copied to *fort.2*
+(analogous to the test cases considered in Paper IV):
+
+*optab11_7f.2* -- opacity table with all chemical elements, with higher resolutions;
+
+*optab11_7hmc.2* -- opacity table with opacity of H, Mg, and Ca removed.
