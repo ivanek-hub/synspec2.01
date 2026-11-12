@@ -24,38 +24,37 @@ results in a graphical way.
 
 ## Documentation
 
-The basic document for the present version of SYNSPEC is a paper submitted to Astronomy and Astrophysics (Hubeny, Allende Prieto, and Osorio, 2027 - refereed to as Paper V) that contains a description of basic physics, plus a special document called Manual, that contains a technical description and user's guide. Both documents are present in (#docs).
+The basic document for the present version of SYNSPEC is a paper submitted to Astronomy and Astrophysics (Hubeny, Allende Prieto, and Osorio, 2027 - refereed to as Paper V) that contains a description of basic physics. It is accompanied by an additional document, called Manual, that contains a technical description and user's guide. Both documents are present in the directory *docs*.
 
-There is also a four-volume series of papers, all in (#docs). They describe previous versions of SYNSPEC, as well as stellar atmosphere code TUSTY. Papers I–III cover TLUSTY 205 and SYNSPEC 51. Paper IV (Hubeny et al. 2021, arXiv:2104.02829) covers the last FORTRAN77 version of SYNSPEC (54). Although the most recent paper together with the Manual provide a comprehensive description of the current SYNSPEC, the previous papers still contain useful information about the basic physics, atomic data files, etc.
+For convenience, the directory *docs* also presents a four-volume series of papers which describe previous versions of SYNSPEC, as well as stellar atmosphere code TUSTY. Papers I–III cover TLUSTY 205 and SYNSPEC 51. Paper IV (Hubeny et al. 2021, arXiv:2104.02829) covers the last FORTRAN77 version of SYNSPEC (54). Although the most recent paper together with the Manual provide a comprehensive description of the current SYNSPEC, the previous papers still contain useful information about the basic physics, atomic data files, etc.
 
 
 ## Repository layout
 
 There are five basic directories:
 
-#### 1. data
+* data: 
 
-Contains a collection of needed atomic data files, partition functions for atoms and molecules, and molecular equilibrium constants
+: Contains a collection of needed atomic data files, partition functions for atoms and molecules, and molecular equilibrium constants
 
-#### 2. docs
+* docs
 
 Contains the documentation, as specified above
 
-#### 3. source
+* source
 
-Contains the source code, inj three separate files:
-synspec2.01.f
-syn_modules.f
-syn_alloc.f
+: Contains the source code, inj three separate files: \br
+*synspec2.01.f* \br
+*syn_modules.f* \br
+*syn_alloc.f*
 
 together with the *makefile* file
 
-#### 4. tests
+* tests
 
-Contains 4 different test cases that illustrate a usage of Synspec in various applications. For each test case we present the script to run the test, the input files, and the subdirectory with the results of the test that can be compared to the result the user obtains, to verify a proper installation of the program and the data.
-More information is provided in the README file inside the directory
+: Contains four different test cases that illustrate a usage of Synspec in various applications. For each test case we present the script to run the test, the input files, and the subdirectory with the results of the test that can be compared to the result the user obtains, to verify a proper installation of the program and the data.
 
 
-#### 5. utils
+* utils
 
-Contains several utility programs, described in the README file inside the directory.
+: Contains three groups of utility programs, described inside the directory.
