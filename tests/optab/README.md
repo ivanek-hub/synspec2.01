@@ -2,7 +2,7 @@ The directory contains input data for computing a simple test opacity table.
 The table has 10,000 wavelength points between 900 and 11,000 A,
 for 3 temperatures between 3 and 15 kK (spaced logarithmically),
 and 3 densities, between 10<sup>-12</sup> and 10<sup>-6</sup> g cm<sup>-3</sup> 
-(again spaced logarithmically).<br>
+(again spaced logarithmically).
 The resulting opacity table is in the file *optes.dat*, as stipulated 
 in the input file *fort.2*.
 
