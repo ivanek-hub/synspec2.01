@@ -12,9 +12,7 @@ should make links to the ASCII files, and to make corresponding changes in
 the file *fort.3*, namely
 
 'gfATO.dat'          0 <br>
-
 'gfMOL.dat'          0    8000. <br>
-
 'gfTiO.dat'          0    5000.
 
 in which case the text (ASCII) format of line lists is used. 
@@ -25,5 +23,4 @@ quite modest resolutions), we include two optional input files, to be copied to 
 (analogous to the test cases considered in Paper IV):
 
 *optab11_7f.2* -- opacity table with all chemical elements, with higher resolutions; <br>
-
 *optab11_7hmc.2* -- opacity table with opacity of H, Mg, and Ca removed.
