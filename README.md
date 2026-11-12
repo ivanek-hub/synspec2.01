@@ -59,8 +59,9 @@ Contains three groups of utility programs in individual subdirectories: <br>
 > eosprog - an exploratory equation-of-state solution, plus a Python program for the corresponding graphical display <br>
 > exo2syn - a suite of programs to generate isotope-averaged molecular partition functions and line lists  from EXOMOL data <br>
 > listhandl - short programs for handling (reducing) line lists
->
-> ## Graphical user interface
+
+
+ ## Graphical user interface
 
 
 * *SYNPLOT* -- is an IDL wrapper
