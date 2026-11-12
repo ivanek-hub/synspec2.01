@@ -2,7 +2,7 @@
 
 ## Description
 
-The depository contains the spectrum synthesis program SYNSPEC, version 2.01. It allows the calculation of synthetic spectra of stars, planets, and disks, from model atmospheres.The code has been migrated to modern FORTRAN, and supplemented with a suite of utilities that allow users to build compatible molecular line lists from EXOMOL data.
+The repository contains the spectrum synthesis program SYNSPEC, version 2.01. It allows the calculation of synthetic spectra of stars, planets, and disks, from model atmospheres.The code has been migrated to modern FORTRAN, and supplemented with a suite of utilities that allow users to build compatible molecular line lists from EXOMOL data.
 
 
 At the coding level, previous versions of the code, written in FORTRAN77, 
