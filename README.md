@@ -40,14 +40,14 @@ Contains a collection of needed atomic data files, partition functions for atoms
 Contains the documentation, as specified above
 
 * source <br>
-Contains the source code, in three separate files: <br>
+Contains the source code, in three separate files, plus the Make file: <br>
 > *synspec2.01.f* <br>
 > *syn_modules.f* <br>
-> *syn_alloc.f* <br>
-together with the *makefile* file
+> *syn_alloc.f* <br> <br>
+> *makefile* 
 
 * tests <br>
-Contains four different test cases that illustrate a usage of Synspec in various applications. For each test case we present the script to run the test, the input files, and the subdirectory with the results of the test that can be compared to the result the user obtains, to verify a proper installation of the program and the data. <br>
+Contains four different test cases that illustrate the usage of Synspec in various applications. For each test case we present a script to run the test, the input files, and the subdirectory with the results of the test that can be compared to the result the user;s own results, to verify a proper installation of the program and the data. <br>
 > bstar - spectrum for a NLTE metal line-blanketed model atmosphere <br>
 > hhe - using a simple H-He NLTE model atmosphere <br>
 > molec - spectrum of a cool Kurucz model atmosphere with multiple molecular line lists <br>
@@ -55,4 +55,7 @@ Contains four different test cases that illustrate a usage of Synspec in various
 
 
 * utils <br>
-Contains three groups of utility programs, described inside the directory.
+Contains three groups of utility programs: <br>
+> eosprog - an exploratory equation-of-state solution, plus a Python program for the corresponding graphical display <br>
+> exo2syn - a suite of programs to generate isotope-averaged molecular partition functions and line lists  from EXOMOL datain the SYNSPEC format <br>
+> listhandl - short programs for handling line lists
