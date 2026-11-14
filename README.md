@@ -69,7 +69,8 @@ The test cases described here in directories *tests/hhe* and *tests/bstar* refer
 Similarly, the test case described in *test/optab* uses this atomic line list, and the standard molecular line lists (containing all important molecules except TiO), plus a special list for TiO. 
 These two, plus the line list for TiO, are available from 
 [here](https://cloud.iac.es/index.php/s/OFJqka85rcPjQ3k/linelists/general/2022).
-[here](https://cloud.iac.es/index.php/s/6x5mRhXj7Ekyc9H)
+[here](https://cloud.iac.es/index.php/s/6x5mRhXj7Ekyc9H) and
+[here](https://cloud.iac.es/index.php/s/6x5mRhXj7Ekyc9H?dir=/linelists/general/2022)
 
 
 The line lists for individual molecules, used in the test case *tests/molec* are are available
