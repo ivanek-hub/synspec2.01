@@ -70,11 +70,11 @@ Similarly, the test case described in *test/optab* uses this atomic line list, a
 These two, plus the line list for TiO, are available from 
 [here](https://cloud.iac.es/index.php/s/OFJqka85rcPjQ3k/linelists/general/2022).
 [here](https://cloud.iac.es/index.php/s/6x5mRhXj7Ekyc9H) and
-[here](https://cloud.iac.es/index.php/s/6x5mRhXj7Ekyc9H?dir=/linelists/general/2022)
+[here](https://cloud.iac.es/index.php/s/6x5mRhXj7Ekyc9H?dir=/linelists/general/2022).
 
 
 The line lists for individual molecules, used in the test case *tests/molec* are are available
-[here](https://cloud.iac.es/index.php/s/OFJqka85rcPjQ3k).
+[here](https://cloud.iac.es/index.php/s/6x5mRhXj7Ekyc9H?dir=/mollist).
 
 Notice that the files in these sites have somewhat different names then those refereed to in the test cases, so the file *fort.3* in the test cases *tests/optab* should be modified, or the downloaded files renamed, accordingly.
 
