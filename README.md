@@ -63,17 +63,17 @@ Contains three groups of utility programs in individual subdirectories: <br>
 
 ## Line lists
 
-Since line lists are generally rather large files, they cannot be accessed directly from the repository, but from another source.
+Since line lists are generally rather large files, they cannot be accessed directly from this repository, but instead from another source.
 
-The test cases described here in directories *tests/hhe* and *tests/bstar* refer to a short atomic line list called *linelist_test.19*, which is a part of directory *data* here. But for realistic calculation of synthetic spectra, one needs a detailed and extended atomic line list.
+The test cases described here in directories *tests/hhe* and *tests/bstar* refer to a short atomic line list called *linelist_test.19*, which is a part of directory *data* here. But for realistic calculations of synthetic spectra, one needs a much more extended atomic line list.
 Similarly, the test case described in *test/optab* uses this atomic line list, and the standard molecular line lists (containing all important molecules except TiO), plus a special list for TiO. 
 These two, plus the line list for TiO, are available from 
 [here](https://cloud.iac.es/index.php/s/OFJqka85rcPjQ3k)/linelists/general/2022).
 
-The line list for individual molecules, used in the test case *tests/molec* are are available
+The line lists for individual molecules, used in the test case *tests/molec* are are available
 [here](https://cloud.iac.es/index.php/s/OFJqka85rcPjQ3k).
 
-Notice that the files in these sites have somewhat different names, so the file *fort.3* in the test cases *tests/optab* should be modified, or the downloaded file renamed, accordingly.
+Notice that the files in these sites have somewhat different names then those refereed to in the test cases, so the file *fort.3* in the test cases *tests/optab* should be modified, or the downloaded files renamed, accordingly.
 
 
 
