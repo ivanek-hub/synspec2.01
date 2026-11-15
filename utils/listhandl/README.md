@@ -1,4 +1,4 @@
-### LISTHANDL -- handling of line lists
+### LISTHANDL
 
 Contains three very simple line-list-handling programs, described in Papers IV and V:
 
