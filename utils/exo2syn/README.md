@@ -1,4 +1,4 @@
-### EXO2SYN -- 
+### EXO2SYN 
 
 Contains the following programs which serve to transfer EXOMOL data (partition functions and line data, including averaging over isotopologues) to  the SYNSPEC-compatible  format. They are described in detail in the Manual:
 
