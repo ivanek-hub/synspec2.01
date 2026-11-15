@@ -15,9 +15,9 @@ the EXOMOL database, and outputs them in the SYNSPC format.
 In addition to the programs, this repository also contains:
 
 - file *isotops*, specifying solar isotope composition, after Lodders (2020).
-- 
+ 
 - subdirectory *pfsum_data*, containing a collection of input data for pfsum.
 
-A collection of scripts and input data  for building the EXOMOL-based line lists using the above programs, that can be found [here](https://github.com/callendeprieto/exomol).
+- A collection of scripts and input data  for building the EXOMOL-based line lists using the above programs, that can be found [here](https://github.com/callendeprieto/exomol).
 
  
