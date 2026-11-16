@@ -24323,7 +24323,7 @@
          aot=ao*htot 
 ! 
       if(init.eq.1) then 
-         write(52,"('    T      rho     w_mol    Ne/Ntot  N(Htot)    '    & 
+         write(52,"('    T      rho     w_mol    Ne/Ntot  N(Htot)    ',   & 
      &     'n(H)   n(H2)',6x,                                             & 
      &     'a(He)   a(C)    a(N)    a(O)   molfr(C) molfr(N) ',           & 
      &     'molfr(O)'/)") 
